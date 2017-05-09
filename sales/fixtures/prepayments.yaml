@@ -1,0 +1,28 @@
+- model: sales.retailprepayment
+  fields:
+    member: 56eb6d04b37b3379b531e012
+    amount: 50000
+    duration: 3
+    balance: 54
+    status: Confirmed
+    paid_on: 2035-01-01T00:00:00.124Z
+
+- model: sales.vodprepayment
+  fields:
+    member: 56eb6d04b37b3379b531e013
+    amount: 500
+    duration: 3
+    balance: 200000000
+    adult_authorized: No
+    status: Confirmed
+    paid_on: 2035-01-01T00:00:00.124Z
+
+- model: sales.vodprepayment
+  fields:
+    member: 56eb6d04b37b3379b531e014
+    amount: 2500
+    duration: 14
+    balance: 200000000
+    adult_authorized: Yes
+    status: Confirmed
+    paid_on: 2035-01-01T00:00:00.124Z

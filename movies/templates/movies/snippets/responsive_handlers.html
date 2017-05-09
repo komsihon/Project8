@@ -1,0 +1,162 @@
+<script type="text/javascript">
+    (function() {
+        var swiperMain, swiperSuggestions, swiperInitialized = false, translateBreakPoint = 180, resumePlayback = true;
+        $('body').on('click', '#navbar-results .ik-li a, .media-list .item .view-details', function() {
+            var type = $(this).data('type'),
+                slug = $(this).data('slug');
+            showMediaDetail(type, slug);
+            return false;
+        });
+
+        processHash();
+        $(window).on('hashchange', processHash);
+
+        function processHash() {
+            var hash = location.hash;
+            if (hash.length < 1) {
+                hideMediaDetail();
+                return
+            }
+            hash =  hash.substring(2);
+            var type, slug;
+            if (hash.indexOf('movie-') == 0) {
+                type = 'movie';
+                slug = hash.replace('movie-', '')
+            } else {
+                type = 'series';
+                slug = hash.replace('series-', '')
+            }
+            showMediaDetail(type, slug);
+        }
+
+        function showMediaDetail(type, slug) {
+            var endpoint = type == 'movie' ? '{% url 'movies:movie_detail'%}' : '{% url 'movies:series_detail'%}';
+            endpoint += '?slug=' + slug + '&format=ajax_html';
+            location.hash = '!' + type + '-' + slug;
+            if ($(window).width() < 768) {
+                $('#navbar-search').hide();
+                translateBreakPoint = 90
+            }
+            $('#navbar').appendTo('#item-detail > .menu');
+            $('#item-detail > .spinner').show();
+            $('#item-detail').fadeIn().find('.swiper-container.item-detail').html('').load(endpoint, function() {
+                $('#item-detail > .spinner').hide();
+                if (swiperInitialized) {
+                    swiperMain.destroy();
+                    swiperMain = null;
+                    swiperSuggestions.destroy();
+                    swiperSuggestions = null;
+                }
+                {% if request.GET.play %}
+                if (resumePlayback) {
+                    $('#{{ request.GET.play }}.play-media').click();
+                    resumePlayback = false;
+                }
+                {% endif %}
+                ikwen.updateButtonsState();
+                initSwiperDetailMain();
+                initSwiperDetailSuggestions();
+                swiperInitialized = true;
+            });
+        }
+
+        function hideMediaDetail() {
+            $('#navbar').prependTo('.swiper-slide.main.content');
+            $('#item-detail').fadeOut();
+            location.hash = ''
+        }
+
+        $('#item-detail').on('click', '.menu .back', hideMediaDetail);
+
+        $('#nav-xs').on('click', '.show-search', function() {
+            $('#navbar-search').prependTo('body').fadeIn().find('input').focus();
+        });
+        $('#navbar-search').on('click', '.hide-search', function() {
+            $('#navbar-search').fadeOut();
+            $('#navbar-search input').val("");
+            $('#search-results').fadeOut()
+        });
+
+        $( window ).resize(ikwen.debouncer(function (e) {
+            if ($(window).width() >= 768) {
+                $('#navbar-search').insertBefore('#site-menu');
+            } else {
+                if (!$('#navbar-search').is(':visible')) {
+                    $('#navbar-search').prependTo('body');
+                    $('#navbar-search input').focus();
+                }
+            }
+            if (swiperInitialized) {
+                swiperMain.destroy();
+                swiperMain = null;
+                swiperSuggestions.destroy();
+                swiperSuggestions = null;
+                initSwiperDetailMain();
+                initSwiperDetailSuggestions();
+            }
+        }));
+
+        function initSwiperDetailMain() {
+            if ($(window).width() > $(window).height()) { // Orientation: Landscape
+                //Firefox Hack,
+                $('.parallax-bg').removeAttr('data-swiper-parallax');
+            }
+            swiperMain = new Swiper('.swiper-container.item-detail', {
+                slidesPerView: 'auto',
+                direction: ($(window).width() > 500 && $(window).width() > $(window).height())  ? 'horizontal': 'vertical',
+                slidesOffsetAfter: ($(window).width() > 500 && $(window).width()) > $(window).height() ? 0: 30,
+                parallax: true,
+                initialSlide: 1,
+                freeMode: true,
+                roundLengths: true,
+                onSetTranslate: function(slider) {
+                    if (slider.translate <= -translateBreakPoint) {
+                        var opacity = Math.abs(slider.translate + translateBreakPoint) / 100;
+                        $('#item-detail .bg').css('opacity', opacity)
+                    } else {
+                        $('#item-detail .bg').css('opacity', 0)
+                    }
+                }
+            });
+        }
+        function initSwiperDetailSuggestions() {
+            swiperSuggestions = new Swiper('.swiper-container.suggestions', {
+                slidesPerView: 4,
+                spaceBetween: 10,
+                freeMode: true,
+                roundLengths: true,
+                slidesOffsetAfter: 15,
+                nested: true,
+                nextButton: '.swiper-button-next',
+                prevButton: '.swiper-button-prev',
+                breakpoints: {
+                    480: {
+                        spaceBetween: 5,
+                        slidesPerView: 3,
+                        slidesOffsetBefore: 15
+                    },
+                    680: {
+                        spaceBetween: $(window).width() < 680 ? 15 : 10,
+                        slidesPerView: $(window).height() < 680 ? 3 : 4
+                    },
+                    768: {
+                        slidesPerView: $(window).height() < 768 ? 2 : 4,
+                        nextButton: null,
+                        prevButton: null
+                    },
+                    1024: {
+                        slidesPerView: 2,
+                        spaceBetween: 10
+                    },
+                    1440: {
+                        slidesPerView: 3,
+                        spaceBetween: 10
+                    },
+                    1600: {
+                        spaceBetween: 0
+                    }
+                }
+            });
+        }
+    })()
+</script>

@@ -1,0 +1,21 @@
+{% load i18n staticfiles %}
+<img src="{% static 'shavida/img/embarassed-smiley.jpg' %}"/>
+<p class="error"></p>
+<div class="{% if config.allow_unit_prepayment %}col-sm-5{% else %}col-sm-6 col-sm-offset-3{% endif %}">
+    <a class="btn btn-success btn-block" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
+    <p class="text-muted" style="font-size: .85em">{% trans "Stream without limitation." %}</p>
+</div>
+{% if config.allow_unit_prepayment %}
+    <div class="col-sm-5 col-sm-offset-2">
+        <button class="btn btn-primary btn-block pay-single"
+                data-id="{{ media.id }}" data-type="{{ media.type }}">{% trans "Pay for this item only" %}</button>
+        <p class="text-muted" style="font-size: .85em">
+            {% trans "Watch a movie or all episodes of a series." %}
+        </p>
+        <p style="margin-top: 5px">
+            <strong>{% trans "Cost" %}:</strong>
+            <em class="text-muted">{{ config.currency_symbol }} {{ media.price }}</em>
+        </p>
+    </div>
+{% endif %}
+<div class="clearfix"></div>

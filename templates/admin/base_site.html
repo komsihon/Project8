@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ title }} | ikwen Shavida{% endblock %}
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/base.css" %}" />
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name" style="float: left">ikwen Shavida (Data Management) -</h1>
+    <a href="{% url 'ikwen:staff_router' %}" style="float: left; margin-top: 12px">{% trans "Go to admin" %} -</a>
+    <a href="{% url 'home' %}" style="float: left; margin-top: 12px">&nbsp;{% trans "Go to website" %}</a>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

@@ -1,0 +1,22 @@
+body {color: #545454}
+.header-top {background: #004565;}
+.header-top a, #navbar .header-top .glyphicon {color: #CBDC2B}
+#navbar {background-color: #00618D;}
+.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {color: #CBDC2B}
+.navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus, #nav-xs a {color: #CBDC2B}
+@media (min-width: 768px) {
+    #navbar-search input {border-bottom-color: #fff}
+}
+#user-menu-xs {border-top: 1px solid #337796; background-color: #00618D;}
+#user-menu-xs li {border-bottom: 1px solid #337796;}
+@media (min-width: 972px) {    
+    .item:hover {box-shadow: 1px 1px 9px 4px rgba(255, 0, 0, 0.35)}
+}
+.btn-success {background-color: #4CAF50;border-color: #4CAF50;}
+.btn-primary {background-color: #004565;border-color: #004565;}
+#content > section > h3 a {color: #00618d;}
+#content > section > h3 a:hover {color: #EC2026}
+#item-detail .bg {background: #00618d}
+
+.bundle {border-color: #004565}
+.bundle .title {background: #004565}

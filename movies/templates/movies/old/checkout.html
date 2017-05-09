@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page_title %}<title> {{ WEBSITE_NAME }} | {% trans "Summary" %} </title>{% endblock %}
+{% block custom_head %}
+    <style type="text/css">
+        #content .wrapper section#selection {box-shadow: none; float: left; margin-top: 15px;padding: 0; width: 710px}
+        section > .cost {float: right; font-size: 16px}
+        section.subtle-shade header {border-bottom: solid 1px #F5C8B8}
+        #cart {float: left; margin-top: 5px}
+        #cart .panel {border: none; padding: 0; position: static; width: 720px}
+        #cart .panel .movies {width: 720px}
+        #cart .panel .item:nth-child(5n) {margin-right: 9px} /* This cancels the rule defined in base.css */
+        #cart .panel .item:nth-child(8n) {margin-right: 0}
+        #cart .cancel-delete {margin: -30px 0 0 256px;}
+        #cart .panel .controls {height: 54px}
+        nav#sub, #sales-logout {display: none}
+    </style>
+{% endblock %}
+{% block content %}
+    <div id="content">
+        <div class="wrapper">
+            <section class="subtle-shade">
+                <header> {% trans "Summary" %} </header>
+                <section id="selection">
+                    <div class="stage" style="float: left">
+                        <div class="title" style="font-size: 18px">{% trans "Your selection" %}</div>
+                        <div class="spinner"></div>
+                    </div>
+                </section>
+                <div id="summary" style="float: right; margin-top: 30px; width: 230px">
+                    <div class="button confirm" style="clear: both; float: right; margin-top: 15px; padding: 10px 15px 5px">
+                        <span class="icon" style="background-position:-24px -24px; margin: -6px 5px 0 0"></span>
+                        <span>{% trans "Confirm checkout" %}</span>
+                    </div>
+                </div>
+                <div class="clear"></div>
+            </section>
+            <div class="clear"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block sub_dialogs %}
+    <div class="dialog confirm has-shade">
+        <div class="stage" style="height: 80px; padding: 10px 10px 6px">
+            <div style="font-size: 16px">
+                {% trans "Confirm checkout" %} ?
+            </div>
+{#            <div class="notice" style="clear: both; float: left; margin:  10px 0">#}
+{#                En confirmant, vous vous engagez à payer au point de retrait.#}
+{#            </div>#}
+            <div class='controls' style="border-top: solid 1px #FCE5DD; clear: both; margin-top: 15px; padding-top: 5px">
+                <button class="default">{% trans "Cancel" %}</button>
+                <button class="confirm submit" style="margin-right: 15px">{% trans "Confirm" %}</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block pre_custom_js %}
+    <script>(function() {
+        ikwen.limitCartItems = false;  // Cause the cart to display only some of the items. Limit is given by MAX_VISIBLE_CART_ITEMS
+    })()</script>
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        (function() {
+            //Copy and Paste cart content to the #selection element !!!
+            var $cart = $('#cart');
+            $cart.find('.panel').removeClass('has-shade');
+            ikwen.populateCartPanel();
+            $cart.find('.delivery, .empty, .items-count, .controls .cost, .panel .close').remove();
+            $('section#selection .spinner').remove();
+            $cart.appendTo('#selection .stage').find('.panel').fadeIn();
+
+            $('div#summary .confirm').click(function() {
+                if ($(this).hasClass('disabled')) return;
+                $('div#lightbox .dialog').hide();
+                $('div#lightbox .dialog.confirm').show();
+                $('#lightbox').fadeIn();
+                $(window).css('cursor', 'wait')
+
+            });
+            $('div#lightbox .submit').click(function() {
+                if ($(this).hasClass('disabled')) return;
+                var endPoint = "{% url 'reporting:confirm_order' %}";
+                var items = ikwen.listMovieForSave();
+                var notice = "Your selection was successfully submitted.";
+                ikwen.submitOrderInfo(endPoint, items, function(order) {
+                    $('div#top-notice-ctnr span').removeClass('failure').html(notice);
+                    $('div#top-notice-ctnr').fadeIn('slow');
+                });
+                $('#lightbox').fadeOut()
+            });
+
+            $(window).scroll(function() {
+                var bnrH = $('#cart').find('.panel .movies').height(),
+                    scrollTop = $(this).scrollTop();
+                if (scrollTop > 40 ) {
+                    $('div#summary').hide().insertAfter('section#selection').fadeIn()
+                }else if (scrollTop < 40 ){
+                    $('div#summary').hide().insertAfter('section.subtle-shade header').fadeIn()
+                }
+
+            });
+            $('div#lightbox button.default, div#lightbox .button.default').click(function() {
+                $('div#lightbox .dialog').hide();
+                $('#lightbox').fadeOut()
+            })
+        })()
+    </script>
+{% endblock %}

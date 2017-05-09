@@ -1,0 +1,128 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Cinemax Club - Rapport des status clients</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'shavida/css/old/jquery-ui.min.css' %}">
+        <style>
+            body {font: normal 12px Arial, sans-serif}
+            form label {float: left; padding-top: 4px; width: 72px}
+            form button {width: 90px}
+            header {font: normal 24px Helvetica, Arial, sans-serif; margin-top: 15px}
+            table {border-collapse: collapse; margin-top: 30px; width: 100%}
+            thead tr:first-child {font: normal 21px Verdana, Arial, sans-serif}
+            thead tr:last-child {font: normal 18px Arial, sans-serif}
+            thead td {padding: 4px 9px}
+            td {border: 1px solid #ddd; box-sizing: border-box; vertical-align: top}
+            td.operator {font-size: 18px}
+            span {color: #999}
+            span.ok {color: #00B600; font-weight: bold}
+            span.alert {color: #FF0000; font-weight: bold}
+            span.warning {color: #ffa139; font-weight: bold}
+            ul {border-right: 1px solid #ddd; box-sizing: border-box; float: left; line-height: 21px; margin: 0; padding: 0 10px; width: 410px}
+            li {list-style-type: none}
+        </style>
+        <script src="{% static 'shavida/js/jquery-ui.min.js' %}"></script>
+        <script src="{% static 'sales/js/from-to.js' %}"></script>
+    </head>
+    <body>
+        <div style="margin: auto; width: 1200px; padding-bottom: 60px">
+            <header>
+                Rapport des status clients: <strong>{{ total_members }}</strong>
+            </header>
+{#            <form style="margin-top: 12px">#}
+{#                <div>#}
+{#                    <label>Début</label>#}
+{#                    <input type="text" name="start_date" />#}
+{#                </div>#}
+{#                <div style="margin-top: 6px">#}
+{#                    <label>Fin</label>#}
+{#                    <input type="text" name="end_date" />#}
+{#                    <button>OK</button>#}
+{#                </div>#}
+{#            </form>#}
+            <table>
+                <thead>
+                    <tr>
+                        <td colspan="2">Convaincus: <strong>{{ total_convinced }}</strong></td>
+                        <td>Inactifs: <strong>{{ inactive_count }}</strong></td>
+                        <td>Suspects: <strong>{{ suspects_count }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 290px">
+                            <span>{{ convinced_count }} (aucune cmde en attente)</span>: <span class="ok">{{ convinced_percent }}%</span>
+                        </td>
+                        <td style="width: 290px">
+                            <span>{{ convinced_with_pending_order_count }} (une cmde en attente)</span>: <span class="warning">{{ convinced_with_pending_order_percent }}%</span>
+                        </td>
+                        <td style="width: 290px">
+                            <span class="warning">{{ inactive_percent }}%</span>
+                        </td>
+                        <td>
+                            <span class="alert">{{ suspects_percent }}%</span>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="operator" colspan="4">MTN</td></tr>
+                    <tr>
+                        <td>{{ mtn.convinced }}</td>
+                        <td>{{ mtn.convinced_with_pending_order }}</td>
+                        <td>{{ mtn.inactive }}</td>
+                        <td>{{ mtn.suspects }}</td>
+                    </tr>
+                    <tr><td class="operator" colspan="4">Orange</td></tr>
+                    <tr>
+                        <td>{{ orange.convinced }}</td>
+                        <td>{{ orange.convinced_with_pending_order }}</td>
+                        <td>{{ orange.inactive }}</td>
+                        <td>{{ orange.suspects }}</td>
+                    </tr>
+                    <tr><td class="operator" colspan="4">Nexttel</td></tr>
+                    <tr>
+                        <td>{{ nexttel.convinced }}</td>
+                        <td>{{ nexttel.convinced_with_pending_order }}</td>
+                        <td>{{ nexttel.inactive }}</td>
+                        <td>{{ nexttel.suspects }}</td>
+                    </tr>
+                    <tr><td class="operator" colspan="4">Camtel</td></tr>
+                    <tr>
+                        <td>{{ camtel.convinced }}</td>
+                        <td>{{ camtel.convinced_with_pending_order }}</td>
+                        <td>{{ camtel.inactive }}</td>
+                        <td>{{ camtel.suspects }}</td>
+                    </tr>
+                </tbody>
+{#                    <tr><td colspan="4">MTN</td></tr>#}
+{#                    <tr>#}
+{#                        <td><div>{{ mtn.convinced }}</div></td>#}
+{#                        <td><div>{{ mtn.convinced_with_pending_order }}</div></td>#}
+{#                        <td><div>{{ mtn.inactive }}</div></td>#}
+{#                        <td><div>{{ mtn.suspects }}</div></td>#}
+{#                    </tr>#}
+{#                    <tr><td colspan="4">Orange</td></tr>#}
+{#                    <tr>#}
+{#                        <td><div>{{ orange.convinced }}</div></td>#}
+{#                        <td><div>{{ orange.convinced_with_pending_order }}</div></td>#}
+{#                        <td><div>{{ orange.inactive }}</div></td>#}
+{#                        <td><div>{{ orange.suspects }}</div></td>#}
+{#                    </tr>#}
+{#                    <tr><td colspan="4">Nexttel</td></tr>#}
+{#                    <tr>#}
+{#                        <td><div>{{ nexttel.convinced }}</div></td>#}
+{#                        <td><div>{{ nexttel.convinced_with_pending_order }}</div></td>#}
+{#                        <td><div>{{ nexttel.inactive }}</div></td>#}
+{#                        <td><div>{{ nexttel.suspects }}</div></td>#}
+{#                    </tr>#}
+{#                    <tr><td colspan="4">Camtel</td></tr>#}
+{#                    <tr>#}
+{#                        <td><div>{{ camtel.convinced }}</div></td>#}
+{#                        <td><div>{{ camtel.convinced_with_pending_order }}</div></td>#}
+{#                        <td><div>{{ camtel.inactive }}</div></td>#}
+{#                        <td><div>{{ camtel.suspects }}</div></td>#}
+{#                    </tr>#}
+            </table>
+        </div>
+    </body>
+</html>

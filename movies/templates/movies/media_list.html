@@ -1,0 +1,78 @@
+{% extends 'movies/base_bs.html' %}
+{% load i18n static auth_tokens webdesign %}
+{% block meta %}
+    <meta property="og:type" content="Website" />
+    <meta property="og:title" content="{{ og_item.title }}" />
+    <meta property="og:image" content="{% get_media_prefix %}{{ og_item.poster.name }}" />
+    <meta property="og:description" content="{{ og_item.synopsis }}" />
+    <meta property="og:url" content="{{ service.url }}{{ og_url }}" />
+    <meta property="og:site_name" content="{{ service.domain|upper }}" />
+{% endblock %}
+
+{% block page_title %} <title>{{ current_category.title }} - {{ service.project_name }}</title> {% endblock %}
+{% block head_style %}
+    {{ block.super }}
+    <style>
+        .media-list .col-xs-4 {padding: 0 5px}
+        @media (min-width: 320px) and (orientation: landscape) {
+            .col-xs-4 {width: 20%}
+        }
+        @media (min-width: 768px) and (orientation: landscape) {
+            .col-xs-4.col-sm-3 {padding: 0 15px; width: 25%}
+            .media-list .row.all {margin-left: -30px}
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+        {% include 'core/snippets/spinner.html' %}
+        <section class="media-list">
+            <h3>{{ current_category.title }}</h3>
+            <div class="container">
+                <div class="row all">
+                    <div class="col-xs-4 col-sm-3 tpl">
+                        <div class='item'>
+                            {% include 'movies/snippets/tpl_media_actions.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spinner"></div>
+        </section>
+    </div>
+{% endblock %}
+{% block js %}
+    {{ block.super }}
+    <script>
+        (function() {
+            $('#lightbox').find('.login').click(function() {
+                var $loginPanel = $('#login-panel');
+                $loginPanel.slideDown();
+                $loginPanel.find('form input:first').focus();
+                $('#lightbox').fadeOut();
+                return false
+            });
+            ikwen.populateCartPanel();
+
+            $('.swiper-slide.content').scroll(function() {
+                var scrollTop = $(this).scrollTop();
+                if ($('#content').height() - $(this).height() - scrollTop <= $('footer').height()) {
+                    ikwen.showNextPage()
+                }
+            });
+
+            var activeMenu = "{{ current_category.id  }}";
+            $("#side-nav ul, #more-categories ul").find('li[val=' + activeMenu + ']').addClass('current');
+            $('table.items td:not(.tpl), table.items .no-result').remove();
+
+            ikwen.mediaEndpoint = "{% url 'movies:get_media' %}";
+            ikwen.nextStartIndex = 0;
+            ikwen.dataSourceIsEmpty = false;
+            ikwen.media = [];
+            ikwen.currentCategoryId = "{{ current_category.id }}";
+            ikwen.listItems(ikwen.mediaEndpoint, ikwen.currentCategoryId);
+        })()
+    </script>
+    {{ config.scripts|safe }}
+{% endblock %}

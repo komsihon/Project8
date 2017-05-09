@@ -1,0 +1,50 @@
+{% extends "movies/base_bs.html" %}
+{% load i18n static shared_media %}
+{% block meta %}
+    <meta property="og:type" content="Website" />
+    <meta property="og:title" content="{{ og_item.title }}" />
+    <meta property="og:image" content="{% get_media_prefix %}{{ og_item.poster.name }}" />
+    <meta property="og:description" content="{{ og_item.synopsis }}" />
+    <meta property="og:url" content="{{ service.url }}{{ og_url }}" />
+    <meta property="og:site_name" content="{{ service.domain|upper }}" />
+{% endblock %}
+{% block page_title %} <title>  {% trans "Search" %}: {{ request.GET.radix }} - {{ service.project_name }} </title> {% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+        <section class="media-list">
+            <p style="margin: 2em 0 1em">{% trans "Search" %}: <strong>{{ request.GET.radix }}</strong></p>
+            <div class="row swiper-container">
+                <div class="swiper-wrapper master">
+                    {% for item in results  %}
+                        <div class="col-sm-3 swiper-slide">
+                            <div class='item'>
+                                {% if item.season %}
+                                    <div class="poster detail" title="{{ item.full_title }}"
+                                         style='background-image: url("{{ item.poster.small_url }}")'>
+                                        <span class="view-details"
+                                           data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                    </div>
+                                    <div class='title has-faded-edge'>{{ item.full_title }}</div>
+                                {% else %}
+                                    <div class="poster detail" title="{{ item.title }}"
+                                         style='background-image: url("{{ item.poster.small_url }}")'>
+                                        <span class="view-details"
+                                           data-type="movie" data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                    </div>
+                                    <div class='title has-faded-edge'>{{ item.title }}</div>
+                                {% endif %}
+                                {% include 'movies/snippets/default_media_actions.html' %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="clear"></div>
+        </section>
+    </div>
+{% endblock %}
+{% block js %}
+    {{ block.super }}
+    {{ config.scripts | safe }}
+{% endblock %}

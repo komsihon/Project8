@@ -1,0 +1,64 @@
+- model: sales.contentupdate
+  fields:
+    member: 56eb6d04b37b3379b531e012
+    movies_add_list:
+      - id: 56eb6d04b37b3379b531e081
+        title: HD Movie
+        slug: hd-movie
+        poster: movies/hd-movie.jpg
+        synopsis: ''
+        filename: hd-movie.mp4
+        provider: 56eb6d04b37b3379b531e011
+        fake_orders: 0
+        fake_clicks: 630
+        price: 300
+        duration: 90
+        size: 150
+        tags: ''
+        categories:
+          - id: 56eb6d04b37b3379b531e091
+            slug: hd
+      - id: 56eb6d04b37b3379b531e082
+        title: Western movie
+        slug: western-movie
+        poster: movies/western-movie.jpg
+        synopsis: ''
+        filename: western-movie.mp4
+        provider: 56eb6d04b37b3379b531e011
+        trailer_slug: trailer-western-movie
+        fake_orders: 0
+        fake_clicks: 630
+        price: 300
+        duration: 90
+        size: 150
+        tags: ''
+        categories:
+          - id: 56eb6d04b37b3379b531e092
+            slug: western
+    series_episodes_add_list:
+      - id: 56eb6d04b37b3379b531e061
+        series_id: 56eb6d04b37b3379b531e071
+        title: Daredevil s01e01
+        slug: daredevil-s01e01
+        filename: Daredevil.saison1/Daredevil-s01e01.mp4
+        provider: 56eb6d04b37b3379b531e011
+        fake_orders: 421
+        orders: 102
+        fake_clicks: 630
+        clicks: 630
+        duration: 40
+        size: 341
+      - id: 56eb6d04b37b3379b531e062
+        series_id: 56eb6d04b37b3379b531e071
+        title: Daredevil s01e02
+        slug: daredevil-s01e02
+        filename: Daredevil.saison1/Daredevil-s01e02.mp4
+        provider: 56eb6d04b37b3379b531e011
+        fake_orders: 421
+        orders: 102
+        fake_clicks: 630
+        clicks: 630
+        duration: 40
+        size: 341
+    provider: 56eb6d04b37b3379b531e011
+    status: Authorized

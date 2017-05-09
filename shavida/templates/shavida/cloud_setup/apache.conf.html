@@ -1,0 +1,31 @@
+{% if is_naked_domain %}
+<VirtualHost *:80>
+    ServerName {{ domain }}
+	Redirect permanent / http://www.{{ domain }}/
+</VirtualHost>
+{% endif %}
+
+<VirtualHost *:80>
+	ServerName {% if is_naked_domain %}www.{% endif %}{{ domain }}
+
+    Alias /crossdomain.xml /home/ikwen/static/shavida/crossdomain.xml
+
+	DocumentRoot /home/ikwen/Cloud/Shavida/{{ ikwen_name }}
+	<Directory /home/ikwen/Cloud/Shavida/{{ ikwen_name }}/conf/>
+		<Files wsgi.py>
+			Order deny,allow
+		    Require all granted
+		</Files>
+	</Directory>
+
+	<Directory /home/ikwen/static/shavida/>
+		<Files crossdomain.xml>
+			Order deny,allow
+		    Require all granted
+		</Files>
+	</Directory>
+
+	WSGIDaemonProcess {{ ikwen_name }} python-path=/home/ikwen/Cloud/Shavida/{{ ikwen_name }}:/home/yayatoo/virtualenv/local/lib/python2.7/site-packages
+	WSGIProcessGroup {{ ikwen_name }}
+	WSGIScriptAlias / /home/ikwen/Cloud/Shavida/{{ ikwen_name }}/conf/wsgi.py
+</VirtualHost>

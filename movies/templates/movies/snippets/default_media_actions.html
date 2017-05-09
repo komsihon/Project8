@@ -1,0 +1,36 @@
+{% load i18n static %}
+<div class="actions{% if settings.IS_CONTENT_VENDOR %} order{% endif %}">
+    {% if settings.IS_VOD_OPERATOR %}
+        {% if item.trailer_resource %}
+            <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ item.id }}" title="{% trans "Watch trailer" %}">
+                <i class="glyphicon glyphicon-eye-open"></i> {% trans "Trailer" %}
+            </button>
+        {% endif %}
+        {% if not user.is_authenticated %}
+            <button class='btn btn-sm connect play-media' title="{% trans "Watch streaming" %}">
+                 <i class="glyphicon glyphicon-play"></i>
+            </button>
+        {% else %}
+            {% if not item.season %}
+                <button class="btn btn-sm play-media" data-type="movie" data-id="{{ item.id }}" title="{% trans "Watch streaming" %}">
+                    <i class="glyphicon glyphicon-play"></i>
+                </button>
+            {% endif %}
+        {% endif %}
+    {% else %}  {# Case of Content Vendor #}
+        {% if not item.season %}
+            <button class="btn btn-sm order-media {{ item.id }}{% if user.is_anonymous %} connect{% elif user.customer.get_has_pending_update %} processing{% else %} confirm{% endif %}"
+                    style="float: right" title="{% trans "Order" %}"
+                    data-title="{{ item.title }}" data-id='{{ item.id }}' data-load='{{ item.load }}' data-price="{{ item.price }}"
+                    data-poster="{% get_media_prefix %}{{ item.poster.small_name }}" data-is_adult="{{ item.is_adult }}" data-type="movie">
+                <i class="glyphicon glyphicon-shopping-cart"></i>
+            </button>
+        {% endif %}
+        {% if item.trailer_resource %}
+            <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ item.id }}" title="{% trans "Watch trailer" %}">
+                <i class="glyphicon glyphicon-play"></i>
+            </button>
+        {% endif %}
+        <span class="load text-muted">{{ item.display_load }}</span>
+    {% endif %}
+</div>

@@ -1,0 +1,53 @@
+{% extends "touch_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block content %}
+    <style>
+        .ui-content {background: #FFF; overflow-x: initial}
+        #content > .item .currency {margin: 0}
+        #content > .item .amount {margin: 0}
+        #content > .item a.button {padding: 7px 23px 7px}
+    </style>
+    <div class="wrapper">
+        <div data-role="content"  id="content" style="padding: 5px 0 30px 11px">
+            <div class='main-title'> Résultats pour <b>"{{ request.GET.radix }}"</b></div>
+            {% for movie in movies %}
+                <div class='item has-shade' movieId="{{ movie.id }}" cost="{{ movie.price }}">
+                    {% if movie.type == 'movie' %}
+                        <a href='{% url 'movie_detail' movie.slug %}' target="_blank" class='poster detail' style='background-image: url("{{ movie.poster_small}}");'></a>
+                    {% else %}
+                        <a href="{% url 'series_detail'  movie.slug  %}" target="_blank" class='poster detail' style='background-image: url("{{ movie.poster_small}}");'></a>
+                    {% endif %}
+                    <div class='title text-has-shade has-faded-edge'>
+                        <span>{{ movie.title }}</span>
+                        <span class="faded-edge"></span>
+                    </div>
+                    <div class=" text-has-shade" style="float: left; font-size: 10px; margin-top: 7px; width: 100%">
+                        {% if movie.type == 'movie' %}
+                            <span class='amount'>{{ movie.price }}</span>
+                            <span class="currency">Fr</span>
+                        {% else %}
+                            <span class='amount'>{{ movie.episode_cost }}</span>
+                            <span class="currency">Fr/Ep</span>
+                        {% endif %}
+                        <span class="orders"> {{ movie.orders }} fois</span>
+                        {% if not request.user.is_authenticated %}
+                            <a class='connect button default'> Commander </a>
+                        {% else %}
+                            {% if request.user.has_pending_order %}
+                                <a class='processing button default'> Commander </a>
+                           {% else %}
+                                {% if movie.type == 'movie' %}
+                                    <a class="button default order" style="float: right" title="{{ movie.title }}" movieid='{{ movie.id }}' cost='{{ movie.price }}' size='{{ movie.size }}' bgImg="url('{{ movie.poster_small }}')"  hd="{{ movie.HD }}" adult="{{ movie.adult }}" extra="{{ movie.extra }}" type="{{ movie.type }}">Commander</a>
+                                {% else %}
+                                    <a href="{% url 'series_detail'  movie.slug  %}" class="button default" style="float: right">Commander</a>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="clear"></div>
+        </div>
+    </div>
+{% endblock %}

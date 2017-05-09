@@ -1,0 +1,102 @@
+{% extends "movies/base_bs.html" %}
+{% load i18n humanize static staticfiles %}
+
+{% block page_title %}
+<title> {{ service.project_name }} - {% trans "History" %} </title>
+{% endblock %}
+{% block head_style %}
+    {{ block.super }}
+    <style type="text/css">
+        body {background: #f6f6f6}
+        #content {padding-top: 80px; min-height: 450px}
+        nav#sub .account {border-bottom: 2px solid #BB4824; color: #300c00; font-weight: bold}
+        #content section {box-shadow: 1px 1px 4px rgba(0, 0, 0, .1); background: #fff; line-height: 1.4; margin: 15px 0 5px; padding: 15px}
+        section header {border-bottom: solid 1px #DBE6FF; font-size: 24px; font-weight: normal; width: 100%}
+        section header .icon {float: right}
+        section .detail {margin-top: 15px}
+        section .detail .unset {color: #555C77; font-style: italic; font-weight: normal}
+        section .detail a {font-size: 13px}
+        section label {font-size: 16px; font-weight: normal}
+        section .action-edit {color: #00f; cursor: pointer; font-size: 15px}
+        .gauge {background: #eee; height: 5px; margin-top: 95px; width: 100%}
+        .fill {background: #0eb600; height: 5px}
+    </style>
+{% endblock %}
+
+{% block header %}
+    {{ block.super }}
+    <div class="container-fluid">
+        {% trans "Account setup" %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <section class="history">
+                    <div class="update-result">
+                        <p class="message hidden"></p>
+                    </div>
+                    <header>
+                        <span> {% trans "History" %} </span>
+                        <span class="icon" style="background-position: -210px -31px"></span>
+                    </header>
+                    <ul class="img-list">
+                        {% for entry in watched %}
+                            <li>
+                                <a href="{% url 'home' %}?play={{ media.id }}#!{{ media.type }}-{{ media.slug }}" class="img" style="background-image: url({% get_media_prefix %}{{ entry.media.poster.name }})">
+                                    <div class="gauge">
+                                        <div class="fill" style="width: {{ entry.percentage }}%"></div>
+                                    </div>
+                                </a>
+                                <div class="description">
+                                    <strong class="title">{{ entry.media.title }}</strong>
+                                    <div class="text-muted">{{ entry.created_on|time:"TIME_FORMAT" }}</div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="clear"></div>
+                </section>
+            </div>
+            <div class="col-md-6">
+                <section class="status">
+                    <div class="update-result">
+                        <p class="message hidden"></p>
+                    </div>
+                    <header>
+                        <span> {% trans "Status" %} </span>
+                        <span class="icon" style="background-position: -210px -31px"></span>
+                    </header>
+                    {% if last_vod_prepayment.days_left %}
+                        <div class="row detail">
+                            <label class="col-xs-12">
+                                {% trans "Current bundle" %}:
+                                <em class="text-muted">{{ config.currency_symbol }} {{ last_vod_prepayment.amount  }}</em>
+                            </label>
+                        </div>
+                        <div class="row detail">
+                            <label class="col-sm-9 col-md-10">
+                                {% trans "Expires on" %}: <em class="text-muted">{{ last_vod_prepayment.get_expiry|time:"TIME_FORMAT"  }}</em>
+                            </label>
+                            <a href="{% url 'movies:bundles' %}" class="col-sm-3 col-md-2 action-edit"> {% trans "Extend" %} </a>
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            <p class="text-muted" style="padding: 1em 0 0 15px">{% trans "Your bundle is exhausted" %}</p>
+                            <div class="col-xs-8 col-sm-5 col-md-4">
+                                <a href="{% url 'movies:bundles' %}" class="btn btn-warning btn-sm btn-block">
+                                    {% trans "Renew" %}
+                                </a>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+{% endblock %}

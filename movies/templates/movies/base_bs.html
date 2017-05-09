@@ -1,0 +1,509 @@
+{% load i18n staticfiles auth_tokens user_agents %}
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% block meta %}{% endblock %}
+        {% include 'core/snippets/favicon.html' %}
+		{% block page_title %}{% endblock %}
+		{% block head_style %}
+            <link rel='stylesheet' href="{% static 'ikwen/font-awesome/css/font-awesome.min.css' %}" />
+            <link rel='stylesheet' href="{% static 'ikwen/css/flatly.bootstrap.min.css' %}" />
+            <link rel='stylesheet' href="{% static 'shavida/swiper/css/swiper.min.css' %}" />
+            <link rel='stylesheet' href="{% static 'shavida/flowplayer/skin/skin.css' %}" />
+            <link rel='stylesheet' href="{% static 'shavida/css/base.css' %}" />
+            {% with theme=config.theme %}
+                {% if theme %}
+                    <link rel='stylesheet' href="{% static 'shavida/skins/' %}{{ theme.template.slug }}/{{ theme.slug }}.css" />
+                {% endif %}
+            {% endwith %}
+		{% endblock %}
+        {% block head_js %}
+            <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+            <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+            <!--[if lt IE 9]>
+              <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+              <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+            <![endif]-->
+        {% endblock %}
+    </head>
+    <body>
+        <div id="top-notice-ctnr" style="display: none">
+            <span class="floating-notice has-shade" style="float: none; position: static"> Error goes here </span>
+        </div>
+        <div class="swiper-container root">
+            <div class="swiper-wrapper">
+                <div id="category-list" class="swiper-slide main" style="display: none">
+                    <div class="visible-xs" style="border-bottom: 1px solid #444; margin-bottom: 1em; padding-bottom: .3em">
+                        <h3>{% trans "Menu" %}</h3>
+                        <ul class="nav nav-pills nav-stacked">
+                            <li>
+                                <a href="{% url 'movies:bundles' %}">{% trans "Bundles" %}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div style="min-height: 270px">
+                        <h3>{% trans "Categories" %}</h3>
+                        <ul class="nav nav-pills nav-stacked">
+                        {% if user.is_authenticated %}
+                            <li class="recommended">
+                                <a href="{% url 'movies:home' %}">{% trans "Recommended for you" %}</a>
+                            </li>
+                        {% endif %}
+                        {% for category in all_categories %}
+                            <li role="presentation" data-id="{{ category.id }}" {% if category == current_category %}class="active"{% endif %}>
+                                <a href="{% url 'movies:media_list' category.slug  %}">{{ category.title }}</a>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="menu-footer">
+                        <p>
+                            <i class="glyphicon glyphicon-earphone" aria-hidden="true" style="margin-right: 5px; top: 3px"></i>{{ config.contact_phone }}
+                        </p>
+                        <p>
+                            &copy; {{ year }} <a href="{{ service.url }}" style="color: #bbb; text-decoration: none"><strong>{{ config.company_name }}</strong></a>.
+                            {% trans "All rights reserved." %}
+                            {% if config.legal_mentions_url %}
+                            - <a href="{{ config.legal_mentions_url }}" style="color: #bbb; text-decoration: none">{% trans "Legal mentions" %}</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="swiper-slide main content">
+                    {% block header %}
+                        {% if settings.IS_VOD_OPERATOR %}
+                            {% url "shavida:history" as history_url %}
+                        {% else %}
+                            {% url "ikwen:console" as history_url %}
+{#                            {% url "ikwen:company_profile" service.project_name_slug as history_url %}#}
+                        {% endif %}
+                        {% url "ikwen:account_setup" as account_setup_url %}
+                        <nav id="navbar" class="navbar navbar-default navbar-static-top">
+                            <div class="header-top hidden-xs hidden-sm">
+                                <div class="container-fluid">
+                                    <div class="top-left">
+                                        <a href="#">
+                                            {% trans "Help" %}
+                                            <i class="glyphicon glyphicon-earphone" aria-hidden="true" style="margin-right: 5px; top: 6px"></i>{{ config.contact_phone }}
+                                        </a>
+                                    </div>
+                                    <div id="auth" class="top-right">
+                                        {% if user.is_authenticated %}
+                                            <ul class="navbar-right" style="margin: -5px 0 -6px">
+                                                <li>
+                                                    <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                        <i class="glyphicon glyphicon-bell" aria-hidden="true"
+                                                           style="font-size: 24px; line-height: .4em; margin-top: 10px"></i>
+                                                        {% if user.get_notice_count > 0 %}
+                                                            <span class="label label-danger">{{ user.get_notice_count }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
+                                                <li id="user-menu" class="dropdown">
+                                                    <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        {{ user.first_name }}
+                                                        <i class="glyphicon glyphicon-user" aria-hidden="true" style="font-size: 24px"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu" aria-labelledby="user-menu">
+{#                                                        <li style="padding: 3px 20px"> {{ user.get_short_name }} </li>#}
+{#                                                        <li role="separator" class="divider" style="margin-bottom: 0; width: 100%"></li>#}
+                                                        {% if user.is_staff %}
+                                                            <li>
+                                                                <a href="{% url 'ikwen:staff_router' %}">Admin</a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
+                                                            </li>
+                                                        {% endif %}
+                                                        <li>
+                                                            <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
+                                                        </li>
+                                                        <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a></li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        {% else %}
+                                            <ul class="anonymous">
+                                                <li><a href="{% url 'ikwen:sign_in' %}">{% trans "Login" %}</a></li>
+                                                <li><a href="{% url 'ikwen:register' %}">{% trans "Create Account" %}</a></li>
+                                            </ul>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container-fluid">
+                                {% block header_brand %}
+                                    <div class="navbar-header">
+                                        <div class="container-fluid">
+                                            <i class="glyphicon glyphicon-menu-left back"></i>
+                                            <div class="menu-button">
+                                                <span class="sr-only">Toggle navigation</span>
+                                                <span class="icon-bar"></span>
+                                                <span class="icon-bar"></span>
+                                                <span class="icon-bar"></span>
+                                            </div>
+                                            {% if config.theme.logo.name %}
+                                                <a class="navbar-brand hidden-xs" href="{{ service.url }}" style="margin-left: -5px">
+                                                    <img alt="Logo {{ service.project_name }}" src="{{ config.theme.logo.url }}" width="145" height="45" />
+                                                </a>
+                                            {% else %}
+                                                <a class="navbar-brand hidden-xs" href="{{ service.url }}">{{ service.project_name }}</a>
+                                            {% endif %}
+                                            <a class="navbar-brand visible-xs" href="{{ service.url }}">{{ service.project_name }}</a>
+                                            <nav class="visible-xs pull-right">
+                                                <ul id="nav-xs">
+                                                    <li class="show-search">
+                                                        <i class="glyphicon glyphicon-search"></i>
+                                                    </li>
+                                                    {% if user.is_authenticated %}
+                                                        {% if settings.IS_CONTENT_VENDOR %}
+                                                            <li class="show-cart">
+                                                                <a href="#">
+                                                                    <i class="glyphicon glyphicon-shopping-cart"></i>
+                                                                    <span class="label label-danger simpleCart_quantity"></span>
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        <li>
+                                                            <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                                <i class="glyphicon glyphicon-bell" aria-hidden="true"></i>
+                                                                {% if user.get_notice_count > 0 %}
+                                                                    <span class="label label-danger">{{ user.get_notice_count }}</span>
+                                                                {% endif %}
+                                                            </a>
+                                                        </li>
+                                                        <li data-toggle="collapse" data-target="#user-menu-xs" aria-expanded="false">
+                                                            <a href="#"><i class="glyphicon glyphicon-user"></i> </a>
+                                                        </li>
+                                                    {% else %}
+                                                        <li>
+                                                            <a href="{% url 'ikwen:sign_in' %}" style="float: left">{% trans "Login" %}</a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                {% endblock %}
+                                <div id="navbar-search" class="navbar-form navbar-left">
+                                    <form id="search" action="{% url 'movies:search' %}" method="get" autocomplete="off">
+                                        <i class="glyphicon glyphicon-menu-left hide-search visible-xs"></i>
+                                        <input type="text" name="radix" class="form-control input-sm" placeholder="Search title or actor">
+                                        <input type="hidden" name="q">
+                                        <span class="spinner" style="display: none"></span>
+                                    </form>
+                                    <div id="navbar-results" style="display: none" data-min-search-chars="2">
+                                        <div class="stage">
+                                            <ul style="float: left; padding-left: 0; width: 100%">
+                                                <li class="ik-li tpl">
+                                                    <a class="target_url" style="display: block">
+                                                        <span class="image poster" style="background-image: url({% static 'ikwen/img/no_photo.png' %})"></span>
+                                                        <div class="info">
+                                                         <div class='title has-faded-edge'>
+                                                             <span> </span>
+                                                             <span class="faded-edge"></span>
+                                                         </div>
+                                                            <p class="about short_description minor-tag"></p>
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                </div>
+                                <div id="site-menu" class="collapse navbar-collapse">
+                                    <div class="container-fluid">
+                                        {% if settings.IS_CONTENT_VENDOR and user.is_authenticated %}
+                                            <div class="header-right2 visible-md visible-lg">
+                                                <div class="cart box_1">
+                                                    <a href="#" class="show-cart">
+                                                        <h3>
+                                                            <div class="total">
+                                                                <span class="simpleCart_total"></span>
+                                                                (<span id="simpleCart_quantity" class="simpleCart_quantity"></span> {% trans "items" context 'cart items' %})
+                                                            </div>
+                                                        </h3>
+                                                    </a>
+                                                    <p>
+                                                        <a href="javascript:;" class="empty-cart" data-toggle="modal" data-target="#confirm-empty-cart" style="margin-top: .2em">
+                                                            <i class="glyphicon glyphicon-shopping-cart" style="font-size: 18px"></i>
+                                                            {% trans "Empty Cart" %}
+                                                        </a>
+                                                    </p>
+                                                    <div class="clearfix"> </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <ul class="nav navbar-nav navbar-right{% if settings.IS_CONTENT_VENDOR %} content-vendor{% endif %}" style="margin: 0 -15px 0 0">
+                                            <li>
+                                                <a href="{% url 'movies:bundles' %}">{% trans "Bundles" %}</a>
+                                            </li>
+                                            {% if user.is_authenticated %}
+                                                {% if settings.IS_CONTENT_VENDOR %}
+                                                    <li class="show-cart visible-xs visible-sm">
+                                                        <a href="#">
+                                                            <i class="glyphicon glyphicon-shopping-cart"></i>
+                                                            <span class="label label-danger simpleCart_quantity"></span>
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                                <li class="visible-sm">
+                                                    <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                        <i class="glyphicon glyphicon-bell" aria-hidden="true"
+                                                           style="font-size: 24px; line-height: .4em; margin-top: 8px"></i>
+                                                        {% if user.get_notice_count > 0 %}
+                                                            <span class="label label-danger" style="margin-top: -18px">{{ user.get_notice_count }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
+                                                <li id="user-menu" class="dropdown visible-sm">
+                                                    <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="glyphicon glyphicon-user"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu" aria-labelledby="user-menu">
+                                                        <li style="padding: 3px 20px"> {{ user.get_short_name }} </li>
+                                                        <li role="separator" class="divider"></li>
+                                                        {% if user.is_staff %}
+                                                            <li>
+                                                                <a href="{% url 'ikwen:staff_router' %}">Admin</a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
+                                                            </li>
+                                                        {% endif %}
+                                                        <li>
+                                                            <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
+                                                        </li>
+                                                        <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a> </li>
+                                                    </ul>
+                                                </li>
+                                            {% else %}
+                                                <li class="hidden-xs">
+                                                    <a href="{% url 'ikwen:sign_in' %}">{% trans "Login" %}</a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div id="user-menu-xs" class="collapse">
+                                    <div class="container-fluid">
+                                        <ul class="nav navbar-nav">
+                                            <li> <a style="font-weight: 700">{{ user.get_short_name }}</a> </li>
+                                            {% if user.is_staff %}
+                                                <li>
+                                                    <a href="{% url 'ikwen:staff_router' %}">Admin</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
+                                                </li>
+                                            {% endif %}
+                                            <li>
+                                                <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
+                                            </li>
+                                            <li>
+                                                <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
+                                            </li>
+                                            <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a> </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    {% endblock %}
+                    {% block content %}{% endblock %}
+                    {% block footer %}
+                        <footer>
+                            &copy; {{ year }} <a href="{{ service.url }}" style="color: #666; text-decoration: none"><strong>{{ config.company_name }}</strong></a>.
+                            {% trans "All rights reserved." %}
+                            {% if config.legal_mentions_url %}
+                            - <a href="{{ config.legal_mentions_url }}" style="color: #666; text-decoration: none">{% trans "Legal mentions" %}</a>
+                            {% endif %}
+                        </footer>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+        <div id="item-detail" style="display: none">
+            <div class="menu">
+                <div class="bg has-shade">{{ service.project_name }}</div>
+            </div>
+            {% include 'core/snippets/spinner.html' %}
+            <div class="swiper-container item-detail"></div>
+        </div>
+        <div id="lightbox" style="display: none">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="dialog player has-shade">
+                {% include 'movies/snippets/streaming_error.html' %}
+                <div id="video-stage" class="wrapper fp-slim"></div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="cart-overlay">
+            <div id="cart" class="has-shade">
+                <button type="button" class="close" aria-label="Close" style="color: #555">&times;</button>
+                <h4>{% trans "Cart" %}</h4>
+                <div class="panel">
+                    <div class="controls">
+                        <div style="float: left; width: 100%">
+                            <div class="quota">
+                                <div class="gauge">
+                                    <span class="fill"></span>
+                                </div>
+                                <div class="text-view">
+                                    <span class="used">0</span><span>%</span>
+                                    <span class='total'>/{{ display_available_quota }} </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <span class="empty-cart caution" data-toggle="modal" data-target="#confirm-empty-cart">
+                                <i class="glyphicon glyphicon-trash"></i>
+                                <span class="hidden-xs">{% trans "Empty cart" %}</span>
+                            </span>
+                            <button class='btn btn-sm btn-success checkout{% if user.customer.get_has_pending_update %} disabled{% endif %}' data-toggle="modal" data-target="#confirm-checkout">
+                                <strong>{% trans "CHECKOUT" %}</strong>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cancel-delete floating-notice text-has-shade none"> {% trans "Deleted" %} - <b class="action">{% trans "undo" %}</b> </div>
+                    <div class="movies">
+                        <div class='item subtle-shade tpl'>
+                            <div class="about">
+                                <div class='name has-faded-edge'>
+                                    <span></span>
+                                    <span class="faded-edge"></span>
+                                </div>
+                            </div>
+                            <div class='delete caution text-has-shade none'> <span> &times; </span> </div>
+                        </div>
+                        {# TODO: Make the multiple files effect when the item in the cart is a series rather than showing individual episodes #}
+                        <div class="more">
+                            <p style="font-size: 21px; margin-top: 15px">+<em style="">10</em></p>
+                            <a href="{% url 'movies:checkout' %}">{% trans "See all" %}</a>
+                        </div>
+                        {% if not user.customer.get_has_pending_update %}
+                        <div class="no-movie">
+                            {% blocktrans %}
+                                <p style="border-bottom: 1px solid #ddd; padding-bottom: 15px">
+                                    Empty. Click <strong>Order</strong> on a media to add it here.
+                                </p>
+                            {% endblocktrans %}
+                            <p style="background: #f8f6f6; margin: -32px auto 0; padding: 12px; width: 45px">{% trans "OR" %}</p>
+                            <p>
+                                <button class="btn btn-sm btn-primary show-form" title="{% trans "Automatically choose the best movies and series for you" %}">
+                                    {% trans "Perform an automatic selection" %}
+                                </button>
+                            </p>
+                            <form id="auto-selection">
+                                <button type="button" class="close cancel" aria-label="Close" style="color: #555">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <div class="form-group">
+                                    <label for="movies-qty">{% trans "Movies" %}</label>
+                                    <input class="form-control input-sm" id="movies-qty" type="number" />
+                                    <span class="hidden-xs">{{ settings.SALES_UNIT_STR }}</span>
+                                    <span class="visible-xs">{{ settings.SALES_UNIT_STR_XS }}</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="series-qty">{% trans "Series" %}</label>
+                                    <input class="form-control input-sm" id="series-qty" type="number" />
+                                    <span class="hidden-xs">{{ settings.SALES_UNIT_STR }}</span>
+                                    <span class="visible-xs">{{ settings.SALES_UNIT_STR_XS }}</span>
+                                </div>
+                                <button class="btn btn-sm btn-success" style="margin-top: 6px; width: 90px">{% trans "OK" %}</button>
+                                <svg class="spinner-container" width="30px" height="30px" viewBox="0 0 16 16" style="display: none; position: absolute; margin: 6px 0 0 6px">
+                                    <circle class="path" cx="8px" cy="8px" r="7px" fill="none" stroke-width="2px"></circle>
+                                </svg>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% block modals %}
+            {% include 'movies/snippets/modal_confirm_checkout.html' %}
+            {% include 'movies/snippets/modal_confirm_empty_cart.html' %}
+            {% include 'movies/snippets/dialog_suggest_payment.html' %}
+            {% include 'movies/snippets/modal_payment_options.html' %}
+        {% endblock %}
+        <script src="{% static 'ikwen/js/jquery-1.12.4.min.js' %}"></script>
+        <script src="{% static 'ikwen/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'shavida/swiper/js/swiper.jquery.min.js' %}"></script>
+        {% if is_iOS %}
+            <script src="{% static 'shavida/flowplayer/flowplayer-3.2.13.min.js' %}"></script>
+            <script src="{% static 'shavida/flowplayer/flowplayer.ipad-3.2.13.min.js' %}"></script>
+        {% else %}
+            <script src="{% static 'shavida/flowplayer/flowplayer.min.js' %}"></script>
+            <script src="{% static 'shavida/flowplayer/flowplayer.hlsjs.min.js' %}"></script>
+        {% endif %}
+        <script src="{% static 'ikwen/hammerjs/hammer.min.js' %}"></script>
+        <script src="{% static 'ikwen/hammerjs/jquery.hammer.js' %}"></script>
+        <script src="{% static 'ikwen/js/ikwen-util.js' %}"></script>
+        <script src="{% static 'shavida/js/movies.js' %}"></script>
+        {% block js %}
+            <script>
+                (function() {
+                    $('form#lang a').click(function() {
+                        var lang = $(this).data('val');
+                        $('form#lang input[name=language]').val(lang);
+                        $('form#lang').submit();
+                        return false
+                    });
+                    {# Swiper menu #}
+                    var toggleMenu = function(){
+                        if (swiper.previousIndex == 0)
+                            swiper.slidePrev()
+                    },
+                    menuButton = document.getElementsByClassName('menu-button')[0];
+                    $('.swiper-slide.main').show();
+                    var swiper = new Swiper('.swiper-container.root', {
+                        slidesPerView: 'auto',
+                        initialSlide: 1,
+                        resistanceRatio: .00000000000001,
+                        onSlideChangeStart: function(slider) {
+                            if (slider.activeIndex == 0) {
+                                menuButton.classList.add('cross');
+                                menuButton.removeEventListener('click', toggleMenu, false)
+                            } else
+                                menuButton.classList.remove('cross')
+                        },
+                        onSlideChangeEnd: function(slider) {
+                            if (slider.activeIndex == 0)
+                                menuButton.removeEventListener('click', toggleMenu, false);
+                            else
+                                menuButton.addEventListener('click', toggleMenu, false)
+                        },
+                        slideToClickedSlide: true
+                    });
+                    {# End Swiper menu #}
+                    $('.payment-method').click(function() {
+                        var actionURL = $(this).data('action-url');
+                        $('form#checkout').attr('action', actionURL).submit();
+                    });
+                })()
+            </script>
+            {% if settings.IS_VOD_OPERATOR %}
+                {% include 'movies/snippets/global_handlers_vod.html' %}
+            {% else %}
+                {% include 'movies/snippets/global_handlers.html' %}
+            {% endif %}
+            {% include 'movies/snippets/responsive_handlers.html' %}
+            {% include 'movies/snippets/vod_handlers.html' %}
+        {% endblock %}
+    </body>
+</html>

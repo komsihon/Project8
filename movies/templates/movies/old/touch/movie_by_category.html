@@ -1,0 +1,67 @@
+{% extends "touch/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block content %}
+    <style>
+        .ui-content {background: #FFF; overflow-x: initial}
+        #content > .item .currency {margin: 0}
+        #content > .item .amount {margin: 0}
+        #content > .item a.button {padding: 7px 23px 0}
+        .ui-listview > .ui-li-static {padding:.8em 1em 0}
+    </style>
+
+    <div data-role="content" id="content" style="float:left; width: 100%">
+
+        <div class="item has-shade tpl">
+            <a class='poster detail' href="{% url 'movie_detail' 'movie_slug' %}" style='background-image: url("{% static 'media/images/movies/1/main.jpg' %}");'></a>
+            <div class='title text-has-shade has-faded-edge'>
+                <span>my film </span>
+                <span class="faded-edge"></span>
+            </div>
+            <div class=" text-has-shade" style="float: left; font-size: 10px; margin-top: 7px; width: 100%">
+                <span class='amount'>300</span>
+                <span class="currency">Fr</span>
+                <span class="orders"> 5200 fois</span>
+                {% if not request.user.is_authenticated %}
+                    <a class='connect button confirm'> Commander </a>
+                {% else %}
+                    {% if request.user.has_pending_order %}
+                        <a class='processing button confirm'> Commander </a>
+                    {% else %}
+                        <a class='order button confirm'> Commander </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+    <div class="spinner hidden"></div>
+    <div class="clear"></div>
+    <script type="text/javascript">
+        (function() {
+            $('div.item:not(.tpl), div.item .no-result').remove()
+            $('a.icon.items-count').show();
+            cvb.populateCartPanel();
+            $(window).scroll(function() {
+                    var topH = $('#top').height() ,
+                    scrollTop = $(this).scrollTop();
+                if ($(document).height() - $(this).height() - scrollTop <= $('footer').height()) {
+	                cvb.showNextPage()
+                }
+            });
+            cvb.mediaEndpoint = "{% url 'get_movies' %}";
+            cvb.TOP_20 = "{{ category_top.id }}"
+            var loadMovies = function(category) {
+                $('div.item:not(.tpl), div.item .no-result').remove()
+                cvb.nextStartIndex = 0
+                cvb.dataSourceIsEmpty = false
+                cvb.movies = []
+                cvb.currentCategoryId = category
+                cvb.listItems(cvb.mediaEndpoint, cvb.currentCategoryId);
+            }
+            loadMovies("{{ category_id }}")
+            var activeMenu = "{{category_id  }}"
+            $("div#side-nav ul").find('li[val=' + activeMenu + ']').addClass('current')
+        })()
+    </script>
+{% endblock %}

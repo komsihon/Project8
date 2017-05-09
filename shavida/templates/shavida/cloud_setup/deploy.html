@@ -1,0 +1,10 @@
+{% extends "core/cloud_setup/deploy.html" %}
+{% load i18n staticfiles auth_tokens %}
+
+{% block config_info %}
+    {% if app.slug == 'shavida-vod' %}
+        <input id="business-type" class="form-control input-sm" type="hidden" name="business_type" value="VOD" />
+    {% else %}
+        <input id="business-type" class="form-control input-sm" type="hidden" name="business_type" value="ContentVendor" />
+    {% endif %}
+{% endblock %}

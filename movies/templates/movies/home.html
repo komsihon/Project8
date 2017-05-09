@@ -1,0 +1,157 @@
+{% extends 'movies/base_bs.html' %}
+{% load i18n static auth_tokens shared_media %}
+{% block meta %}
+    <meta property="og:type" content="Website" />
+    <meta property="og:title" content="{{ og_item.title }}" />
+    <meta property="og:image" content="{% get_media_prefix %}{{ og_item.poster.name }}" />
+    {% if settings.IS_GAME_VENDOR %}
+        <meta property="og:description" content="{{ og_item.synopsis }}" />
+    {% else %}
+        <meta property="og:description" content="{{ service.project_name }} - {{ config.short_description }}" />
+    {% endif %}
+    <meta property="og:url" content="{{ service.url }}{{ og_url }}" />
+    <meta property="og:site_name" content="{{ service.domain|upper }}" />
+    <meta name="abstract" content="{{ service.project_name }} - {{ config.short_description }}"/>
+{% endblock %}
+
+{% block page_title %} <title>{{ service.project_name }} - {% trans "Home" %}</title> {% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+        {% if recommended_items|length > 0 %}
+            <section class="media-list">
+                {% if user.is_authenticated %}
+                    <h3>{% trans "Recommended for you" %}</h3>
+                {% else %}
+                    <h3>{{ top_title }}</h3>
+                {% endif %}
+                <div class="row swiper-container">
+                    <div class="swiper-wrapper master">
+                        {% for item in recommended_items  %}
+                            <div class="col-sm-3 swiper-slide">
+                                <div class='item'>
+                                    {% if item.season %}
+                                        <div class="poster detail" title="{{ item.title }}"
+                                             {% if item.poster.name %}style='background-image: url("{{ item.poster.small_url|from_provider:item.provider }}")'{% endif %}>
+                                            <span class="view-details"
+                                               data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                        </div>
+                                    {% else %}
+                                        <div class="poster detail" title="{{ item.title }}"
+                                             {% if item.poster.name %}style='background-image: url("{{ item.poster.small_url|from_provider:item.provider }}")'{% endif %}>
+                                            <span class="view-details"
+                                               data-type="movie" data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                        </div>
+                                    {% endif %}
+                                    <div class='title has-faded-edge'>{{ item.title }}</div>
+                                    {% include 'movies/snippets/default_media_actions.html' %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="clear"></div>
+            </section>
+        {% endif %}
+        <section class="media-list tpl" data-order_of_appearance="">
+            <h3>
+                <span></span>
+                <a class="show-all">{% trans "Show all" %}</a>
+            </h3>
+            <div class="row swiper-container">
+                <div class="swiper-wrapper master">
+                    <div class="col-sm-3 swiper-slide tpl">
+                        <div class='item'>
+                            {% include 'movies/snippets/tpl_media_actions.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spinner"></div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script type="text/javascript">
+        (function() {
+            {% if request.GET.accountCreated %}
+                $('.top-notice-ctnr span').html("{% trans "Your account was successfully created." %}");
+                $('.top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
+            {% endif %}
+            {% if request.GET.bundleChosen %}
+                $('#top-notice-ctnr span').html("{% trans "Your bundle was successfully activated." %}");
+                $('#top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
+            {% endif %}
+            $('div#lightbox .dialog.confirm-adult button.confirm').click(function() {
+                $('body, button').css('cursor', 'wait');
+                $.getJSON("{% url 'shavida:authorize_adult' %}", null, function (data) {
+                    $('body, button').css('cursor', 'default');
+                    if (data.error) alert(data.error);
+                    else {
+                        {% if latest_prepayment and latest_prepayment.amount >= 2500 and latest_prepayment_days_left >= 0 %}
+                            window.location = "{% url 'movies:home' %}#adult_autorized";
+                        {% else %}
+                            window.location = "{% url 'movies:bundles' %}";
+                        {% endif %}
+                    }
+                })
+            });
+            function applySectionTemplate($tpl, category) {
+                $tpl.attr('data-order_of_appearance', category.id);
+                $tpl.find('.show-all').attr('href', "/category/" + category.slug);
+                return $tpl
+            }
+            var movieCategories = [], category;
+            {% for category in all_categories %}
+                category = {
+                    id : "{{category.id}}",
+                    title : "{{ category.title }}",
+                    slug : "{{ category.slug }}",
+                    previewsTitle : "{{ category.previews_title | safe }}"
+                };
+                movieCategories.push(category);
+            {% endfor %}
+
+            ikwen.mediaEndpoint = "{% url 'movies:get_recommended_for_single_category' %}";
+            {% if not user.is_authenticated %}
+                ikwen.mediaEndpoint = "{% url 'movies:get_media' %}";
+            {% endif %}
+            ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+            movieCategories.splice(0,1);
+            ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+            movieCategories.splice(0,1);
+
+            if ($(window).width() < 768) {
+                 var swiper = new Swiper('.media-list .swiper-container', {
+                     slidesPerView: 6,
+                     spaceBetween: 10,
+                     freeMode: true,
+                     slidesOffsetBefore: 15,
+                     slidesOffsetAfter: 15,
+                     nested: true,
+                     breakpoints: {
+                         480: {
+                             slidesPerView: 4
+                         },
+                         380: {
+                             slidesPerView: 3
+                         }
+                     }
+                });
+            }
+
+            $('.swiper-slide.content').scroll(function() {
+                var scrollTop = $(this).scrollTop();
+                if ($('#content').height() - $(this).height() - scrollTop <= $('footer').height()) {
+                    if (movieCategories.length == 0) return;
+	                ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+                    movieCategories.splice(0,1)
+                }
+            });
+            $('#category-list li.recommended').addClass('active')
+        })()
+    </script>
+   {{ config.scripts|safe }}
+{% endblock %}

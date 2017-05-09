@@ -1,0 +1,158 @@
+{% load static %}
+<script type="text/javascript">
+    (function() {
+        /**********************************************************************/
+        /**************************   VOD HANDLERS    *************************/
+        /**********************************************************************/
+        var type, id, player, _timerId;
+        $('body').on('click', '.play-media:not(.connect), .play-trailer', function() {
+            type = $(this).data('type');
+            id = $(this).data('id');
+            var streamEndpoint = '{% url 'movies:stream' %}',
+                size = $(this).data('size'),
+                $dialogPlayer = $('div#lightbox .dialog.player');
+            if (!type) return true; // No type will generally mean "series", thus his cause the action to take to detail page of the series
+            $('div#lightbox .dialog').hide();
+            $('#video-stage, div#lightbox .dialog.player .streaming-error').hide();
+            $dialogPlayer.addClass('spinner');
+            $dialogPlayer.show();
+            $('#lightbox').addClass('stream').fadeIn();
+            $.getJSON(streamEndpoint, {is_check: 'yes', item_id: id, type: type}, function(data) {
+                $dialogPlayer.removeClass('spinner');
+                if (data.error) {
+                    showStreamError(data);
+                } else {
+                    $dialogPlayer.addClass('stream');
+                    $('#video-stage, div#lightbox .dialog.player .streaming-error').hide();
+                    if (data.html) {
+                        var $iframe = $(data.html),
+                            frameWidth = parseInt($iframe.attr('width')),
+                            frameHeight = parseInt($iframe.attr('height')),
+                            windowWidth = $(window).width();
+                        if (frameWidth > windowWidth) {
+                            var ratio = frameHeight / frameWidth;
+                            $iframe.attr({width: windowWidth, height: frameHeight * ratio});
+                        } else {
+                            $dialogPlayer.width(frameWidth + 72);
+                            $dialogPlayer.height(frameHeight + 48);
+                        }
+                        $iframe.insertBefore('#video-stage');
+                    } else if (data.media_url) {
+                        if ($(window).width() < $(window).height()) {
+                            $dialogPlayer.css({height: '30%', width: '100%'})
+                        } else {
+                            $dialogPlayer.css({height: '50%', width: '50%'})
+                        }
+                        {% if is_iOS %}
+                            player = $f("video-stage", {
+                                // flash configuration: enable stage video for hardware acceleration
+                                wmode: "direct",
+                                src: "http://releases.flowplayer.org/swf/flowplayer-3.2.18.swf"
+
+                            }, {
+                                plugins: {
+                                    flashls: {
+                                        // load the flashls plugin
+                                        url: "{% static 'shavida/flowplayer/flashlsFlowPlayer.swf' %}"
+                                    }
+                                },
+                                clip: {
+                                    url: data.media_url,
+                                    // configure the flashls plugin as the clip's provider and urlResolver
+                                    provider: "flashls",
+                                    urlResolvers: "flashls",
+                                    accelerated: true,
+                                    scaling: "fit"
+                                },
+                                // bright canvas for light video
+                                canvas: {
+                                    backgroundGradient: "none",
+                                    backgroundColor: "#222222"
+                                }
+                            });
+                            player.onLoad(function() {
+                                startProgressionMonitoring()
+                            });
+                            player.ipad();
+                        {% else %}
+                            var api = flowplayer("#video-stage", {
+                                splash: true,
+                                ratio: 5/12,
+                                // manual HLS level selection for Drive videos
+                                hlsQualities: "drive",
+                                clip: {
+                                  sources: [
+                                    {type: "application/x-mpegurl", src:  data.media_url},
+                                    {type: "video/mp4", src:  data.media_url}
+                                  ]
+                                }
+                            }).load();
+                            api.on('ready', function() {
+                                api.play();
+                                startProgressionMonitoring();
+                            });
+                        {% endif %}
+                        $('#video-stage').show();
+                    }
+                }
+            });
+            return false
+        }).on('click', '.btn.pay-single', function() {
+            $('div#lightbox').removeClass('stream').fadeOut();
+            var id = $(this).data('id'),
+                type = $(this).data('type');
+            $('#media-id').val(id);
+            $('#media-type').val(type);
+            $('.payment-method.cash').data('action-url', '{% url 'sales:choose_temp_bundle' %}');
+            $('#payment-methods').modal('show')
+        }).on('click', '#lightbox.stream', function() {
+            $('div#lightbox').removeClass('stream').fadeOut();
+            try {
+                var api = flowplayer();
+                api.stop();
+                clearInterval(_timerId);
+            } catch (e) {}
+            $('div#lightbox iframe').remove();
+        });
+        $('#video-stage').bind('contextmenu',function() { return false });
+        $('#lightbox').on('click', '.dialog.player.stream', function(e) {
+            e.stopPropagation();
+        }).on('click', '.dialog.player .suggest-payment .pay-single .action', function(e) {
+            $('div#lightbox .dialog.player .suggest-payment').animate({marginTop: '12px'});
+            $('div#lightbox .dialog.player .suggest-payment .pay-single .means').fadeIn();
+            e.stopPropagation();
+        });
+        function showStreamError(data) {
+            $('#video-stage').hide();
+            $('div#lightbox .dialog.player').removeClass('stream');
+            if (data.html) {
+                $('div#lightbox .dialog.player .streaming-error').html(data.html).show().find('p.error').html(data.error);
+            } else
+                $('div#lightbox .dialog.player .streaming-error').show().find('p').html(data.error);
+        }
+        function startProgressionMonitoring() {
+            _timerId = setInterval(function() {
+                {% if is_iOS %}  // iOS rather uses the Flash fallback which API is a bit different
+                    var duration = player.getClip().duration,
+                        currentPos = player.getTime();
+                {% else %}
+                    var api = flowplayer(),
+                        duration = api.video.duration,
+                        currentPos = api.video.time;
+                {% endif %}
+                var percent = Math.round(currentPos/duration * 100);
+                $.getJSON("{% url 'shavida:history' %}", {action: 'monitor', media_id: id, percentage: percent}, function(resp){
+                    if (resp.error) {
+                        try {
+                            var api = flowplayer();
+                            api.stop();
+                            clearInterval(_timerId);
+                        } catch (e) {}
+                        $('div#lightbox iframe').remove();
+                        showStreamError(resp)
+                    }
+                })
+            }, 60000)
+        }
+    })()
+</script>

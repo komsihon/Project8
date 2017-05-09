@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page_title %} <title>{{ WEBSITE_NAME }} - {{ current_category.title }}</title> {% endblock %}
+{% block custom_head %}
+    <style type="text/css">
+        #content section {float: left; padding: 10px 10px 20px; width: 960px}
+        #content section:not(:first-child) {margin-top: 24px}
+        #content section header {color: #775F57; font-size: 2em; font-weight: lighter; margin-bottom: 10px}
+        #content section header span {float: none}
+        #content section header a {color: #775F57; float: right; font-size: 12px; margin: 15px 3px 0 0; text-decoration: none}
+        #content section header a:hover {color: #300c00}
+{#        .item {box-sizing: border-box; float: left; height: 279px; padding: 10px; overflow: hidden; width: 239px}#}
+{#        .item .poster {background-size: 240px auto; background-position: center -20px; box-sizing: border-box; float: left; height: 230px; width: 100%}#}
+{#        .item.main {height: 559px; width: 479px}#}
+{#        .item.main .poster {height: 480px}#}
+{#        .item .title {float: left; height: 15px; margin-top: 3px; text-transform: capitalize; width: 100%}#}
+{#        .item .orders {float: left; font-size: 12px; width: 100%}#}
+{#        .item .orders span {float: none}#}
+{#        .item button {float: right; margin-top: 6px}#}
+        table.items {border-collapse: collapse}
+        table.items td {box-sizing: border-box; padding: 0; width: 240px}
+        nav#sub, #sales-logout {display: none}
+        #banner {height: 135px}
+    </style>
+{% endblock %}
+{% block content %}
+    {% include 'snippets/fb_sdk.html' %}
+    <div id="content" class="media-list">
+        <div class="wrapper">
+            {% if current_category.banner %}
+                <div style="background: #fff; border: 1px solid #FCE5DD; box-sizing: border-box; padding: 9px; width: 100%">
+                    <div id="banner" class="inner-shade"  style='background-image: url("{{ current_category.banner.url }}")'></div>
+                </div>
+            {% endif %}
+            <section>
+                <table class="items">
+                    <td class="tpl">
+                        <div class='item media'>
+                            {% include 'movies/old/snippets/tpl_media_actions.html' %}
+                        </div>
+                    </td>
+                </table>
+                <div class="spinner hidden"></div>
+            </section>
+        </div>
+        <div class="clear"></div>
+    </div>
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        (function() {
+            {% if IS_VOD_OPERATOR %}
+                $('div#top .logo > a').text("{{ current_category.title }}");
+            {% endif %}
+            $('#lightbox').find('.login').click(function() {
+                var $loginPanel = $('#login-panel');
+                $loginPanel.slideDown();
+                $loginPanel.find('form input:first').focus();
+                $('#lightbox').fadeOut();
+                return false
+            });
+            ikwen.populateCartPanel();
+            $(window).scroll(function() {
+                var topH = $('#top').height() + 4,
+                scrollTop = $(this).scrollTop();
+                if ($(document).height() - $(this).height() - scrollTop <= $('footer').height()) {
+	                ikwen.showNextPage()
+                }
+            });
+            var activeMenu = "{{category_id  }}";
+            $("#side-nav ul, #more-categories ul").find('li[val=' + activeMenu + ']').addClass('current');
+            $('table.items td:not(.tpl), table.items .no-result').remove();
+
+            ikwen.mediaEndpoint = "{% url 'movies:get_media' %}";
+            ikwen.nextStartIndex = 0;
+            ikwen.dataSourceIsEmpty = false;
+            ikwen.media = [];
+            ikwen.currentCategoryId = "{{ category_id }}";
+            ikwen.listItems(ikwen.mediaEndpoint, ikwen.currentCategoryId);
+        })()
+    </script>
+    {% include 'snippets/google_analytics.html' %}
+{% endblock %}
