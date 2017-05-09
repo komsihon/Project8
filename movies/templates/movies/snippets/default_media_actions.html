@@ -26,7 +26,7 @@
                 <i class="glyphicon glyphicon-shopping-cart"></i>
             </button>
         {% endif %}
-        {% if item.trailer_resource %}
+        {% if not settings.IS_GAME_VENDOR and item.trailer_resource %}
             <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ item.id }}" title="{% trans "Watch trailer" %}">
                 <i class="glyphicon glyphicon-play"></i>
             </button>

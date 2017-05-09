@@ -18,9 +18,11 @@
         <button class='btn btn-sm order-media{% if user.is_anonymous %} connect{% elif user.customer.get_has_pending_update %} processing{% else %} confirm{% endif %}' title="{% trans "Order" %}">
             <i class="glyphicon glyphicon-shopping-cart"></i>
         </button>
+        {% if not settings.IS_GAME_VENDOR %}
         <button class="btn btn-sm play-trailer" title="{% trans "Watch trailer" %}">
             <i class="glyphicon glyphicon-play"></i>
         </button>
+        {% endif %}
         <span class="load text-muted"></span>
     {% endif %}
 </div>
