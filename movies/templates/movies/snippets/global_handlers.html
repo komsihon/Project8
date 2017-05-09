@@ -1,0 +1,208 @@
+{% load i18n %}
+<script type="text/javascript">
+    (function() {
+        /**********************************************************************/
+        /************************   GLOBAL HANDLERS    ************************/
+        /**********************************************************************/
+        {% if user.is_authenticated %}
+            ikwen.availableQuota = parseInt("{{ available_quota }}");
+            ikwen.canAccessAdultContent = "{{ user.can_access_adult_content }}".toLowerCase();
+        {% endif %}
+
+        var itemsCount = localStorage.getItem('itemsCount');
+        if (!itemsCount) itemsCount = 0;
+        $('div#cart .items-count span').text(itemsCount);
+
+        $('form#search').submit(function() {
+            var q = ikwen.stripArticles($(this).find('[name=radix]').val());
+            $(this).find('[name=q]').val(q)
+        });
+        $('form#search input').focusin(function() {
+           $('#navbar-results').removeClass('hidden')
+        }).blur(function() {
+            $(this).val("");
+            $('#navbar-results').fadeOut()
+        }).keyup(function() {
+            var str = $(this).val();
+            str = ikwen.stripArticles(str);
+            ikwen.search("{% url 'movies:search' %}" , str, '#navbar-results', '#navbar-results .ik-li', 'form#search .spinner')
+        });
+        $('div#user-menu .logout').click(function() {
+            localStorage.removeItem('moviesSelection');
+            localStorage.removeItem('seriesSelection');
+            localStorage.removeItem('itemsCount')
+        });
+        $('div#content').on('mouseenter', '.media-list .item:not(.main)', function() {
+            $(this).find('a.poster').animate({height:190},'swing')
+        }).on('mouseleave', '.media-list .item:not(.main)', function(){
+            $(this).find('a.poster').animate({height: 230},'swing')
+        });
+     // ask the user to connect if he is not when trying to order movies
+        $('body').on('click', '.order-media.connect', function() {
+            var signInUrl = '{% url 'ikwen:sign_in' %}';
+            window.location = signInUrl;
+        }).on('click', '.order-media.processing', function() {
+            var notice = "{% blocktrans %}Sorry! You have a pending order - <a href='{{ history_url }}'>Cancel it</a>{% endblocktrans %}";
+            $('div#top-notice-ctnr span').html(notice);
+            $('#top-notice-ctnr').hide().fadeIn().delay(5000).fadeOut();
+            return false
+        }).on('click', '.order-media.confirm', function() {
+            if ($(this).hasClass('disabled')) return;
+            var notice;
+            if (localStorage.getItem('cartIsAnAutoSelection')) {
+                notice = "{% trans "Automatic selection cannot be edited. Empty cart first." %}";
+                $('div#top-notice-ctnr span').text(notice).removeClass('failure');
+                $('#top-notice-ctnr').hide().fadeIn().delay(10000).fadeOut();
+                return
+            }
+            var load = $(this).data('load');
+            if (!ikwen.hasEnoughBalance(load)) {
+                notice = "{% blocktrans %}Sorry, your quota has been exhausted. <b><a href='{{ bundles_url }}'>Take a new bundle</a></b>{% endblocktrans %}";
+                $('div#top-notice-ctnr span').html(notice).addClass('failure');
+                $('#top-notice-ctnr').hide().fadeIn().delay(10000).fadeOut();
+                ikwen.warnedAboutStorage = true;
+                return false
+            }
+            var item = {
+                type: $(this).data('type'),
+                id: $(this).data('id'),
+                price: $(this).data('price'),
+                load: load,
+                title: $(this).data('title'),
+                poster: {
+                    small_url: $(this).data('poster')
+                }
+            };
+            if ($('div#cart .item:not(.tpl)').length == 0) $('div#cart .panel').slideDown();
+            ikwen.addToCart(item);
+            ikwen.populateCartPanel()
+        });
+        $('div#lightbox .cancel.default, div#lightbox .close').click(function() {
+            $('#lightbox').fadeOut()
+        });
+        /********************************************************************/
+        /***********************    CART HANDLERS    ************************/
+        /********************************************************************/
+        $('.do-empty-cart').click(function() {
+            ikwen.clearCart()
+        });
+
+        $('.do-checkout').click(function() {
+            var endpoint = "{% url 'sales:confirm_order' %}",
+                items = ikwen.listMovieForSave(),
+                notice = "{% trans "Your order was successfully submitted." %}";
+            ikwen.submitOrderInfo(endpoint, items, function(order) {
+                $('div#top-notice-ctnr span').removeClass('failure').html(notice);
+                $('div#top-notice-ctnr').fadeIn('slow');
+            });
+            $('#confirm-checkout').modal('hide');
+            $('div#cart').animate({marginRight: '-300px'}, 'fast');
+            $('.cart-overlay').fadeOut('fast');
+        });
+
+        $('.show-cart').click(function() {
+            $('.cart-overlay').fadeIn('fast');
+            $('div#cart').animate({marginRight: 0}, 'fast');
+        });
+        $('.cart-overlay').click(function(e) {
+            var elt = e.target.className;
+            if (elt.indexOf('cart-overlay') >= 0 || elt.indexOf('close') >= 0) {
+                $('div#cart').animate({marginRight: '-300px'}, 'fast');
+                $('.cart-overlay').fadeOut('fast');
+            }
+        });
+        $('div#cart').on('mouseenter', '.panel .item', function() {
+            $(this).find('.delete-bg, .delete').show();
+        }).on('mouseleave', '.panel .item', function() {
+            $(this).find('.delete-bg, .delete').hide();
+        }).on('click', '.item .delete', function() {
+            if (localStorage.getItem('cartIsAnAutoSelection')) {
+                var notice = "{% trans "Automatic selection cannot be edited. Empty cart first." %}";
+                $('div#top-notice-ctnr span').text(notice).removeClass('failure');
+                $('#top-notice-ctnr').hide().fadeIn().delay(10000).fadeOut();
+                return
+            }
+            var index = $(this).parents('.item').index(),
+                type = $(this).parents('.item').data('type');
+            ikwen.removeFromCart(index, type);
+            $(".cancel-delete").fadeIn().delay(6000).fadeOut();
+            ikwen.populateCartPanel()
+        });
+        $('div#lightbox .login, .no-result a.login-for-more').click(function() {
+            $('#login-panel').slideDown();
+            $('div#login-panel form input:first').focus();
+            $('#lightbox').fadeOut();
+            return false
+        });
+        $('div#cart .cancel-delete .action').click(function() {
+            ikwen.addToCart(ikwen.latestDeletedElt.item, ikwen.latestDeletedElt.index);
+            ikwen.populateCartPanel();
+            $(".cancel-delete").fadeOut()
+        });
+        $('div#cart .no-movie .show-form').click(function() {
+            $('#auto-selection').fadeIn();
+            $(this).hide()
+        });
+        $('form#auto-selection .cancel').click(function() {
+            $('#auto-selection').fadeOut();
+            $('div#cart .no-movie .show-form').show()
+        });
+        var autoSelectionCompleteNotice = "{% trans "Your automatic selection is complete." %}";
+        $('form#auto-selection').submit(function() {
+            var moviesLoad = parseInt($('input#movies-qty').val()),
+                seriesLoad = parseInt($('input#series-qty').val()),
+                load = moviesLoad + seriesLoad,
+                salesUnit = "{{ settings.SALES_UNIT }}";
+            if (salesUnit == "Volume") {
+                moviesLoad *= 1000;
+                seriesLoad *= 1000;
+                load *= 1000;
+            } else {
+                moviesLoad *= 60;
+                seriesLoad *= 60;
+                load *= 60;
+            }
+            if (!ikwen.hasEnoughBalance(load)) {
+                var notice = "{% blocktrans %}Sorry, your quota is insufficient. <b><a href='{{ bundles_url }}'>Take a new bundle</a></b>{% endblocktrans %}";
+                $('div#top-notice-ctnr span').html(notice).addClass('failure');
+                $('#top-notice-ctnr').hide().fadeIn().delay(10000).fadeOut();
+                return false
+            }
+            $('form#auto-selection .spinner-container').show();
+            $.getJSON("{% url 'reporting:start_auto_selection' %}", {movies_max_load: moviesLoad, series_max_load: seriesLoad}, function(data) {
+                $('form#auto-selection .spinner-container').hide();
+                var notice = "{% blocktrans %}Your selection is running and the cart will be automatically populated when done.{% endblocktrans %}";
+                $('div#cart .panel').slideUp();
+                $('div#cart .close').click();
+                $('div#top-notice-ctnr span').html(notice).removeClass('failure');
+                $('#top-notice-ctnr').hide().fadeIn();
+            });
+            localStorage.setItem('autoSelectionIsRunning', 'Yes');
+            ikwen.startAutoSelectionStatusChecker("{% url 'reporting:check_auto_selection_status' %}", autoSelectionCompleteNotice);
+            return false;
+        });
+
+        $('div.estimation a').click(function() {
+            $('div#lightbox .dialog').hide();
+            $('div#lightbox .dialog.point-of-sales').show();
+            $('#lightbox').fadeIn();
+            $('div#lightbox .dialog.point-of-sales input').focus();
+            $('div.estimation a:first-child').hide();
+            $('div.estimation .time').fadeIn();
+            return false
+        });
+        if (localStorage.getItem('downloadSpeed')) {
+            $('div.estimation a:first-child').hide();
+            $('div.estimation .time').fadeIn();
+        }
+        $(window).bind('storage', ikwen.populateCartPanel);
+        ikwen.populateCartPanel();
+        ikwen.startAutoSelectionStatusChecker("{% url 'reporting:check_auto_selection_status' %}", autoSelectionCompleteNotice);
+
+        {% if request.GET.bundleChosen %}
+            $('div#top-notice-ctnr span').html("{% trans "Your bundle was chosen." %}");
+            $('div#top-notice-ctnr').fadeIn('slow').delay(10000).fadeOut();
+        {% endif %}
+
+    })()
+</script>

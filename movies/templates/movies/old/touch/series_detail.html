@@ -1,0 +1,137 @@
+{% extends "touch_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block meta %}
+    <meta name="keywords" content="{{ current_series.title }} sans telechargement, telechargement gratuit {{ current_series.title }}"/>
+    <meta name="abstract" content="{{ current_series.title }} sur CINEMAX.CLUB"/>
+{% endblock %}
+{% block page_title %} <title> Cinemax Club | {{ current_series.title }} </title> {% endblock %}
+{% block custom_head %}
+
+{% endblock %}
+{% block content %}
+    <style type="text/css">
+        #content .episodes-list {clear:both; float: left; margin-top: 1.5em; width: 100%}
+        #content .episodes-list .episode {border-top: solid 1px #FCE5DD; float: left; padding:.7em 0; width: 100%}
+        #content .episodes-list .name {float: left; margin-top: .5em; overflow: hidden}
+        #content .episodes-list .cost {margin-top: 5px}
+        #content .episodes-list .order {float: right}
+        #suggestions {clear: both; float: left; margin-top: 15px; width: 100%}
+        #suggestions > .title {border-bottom: 1px solid #FCE5DD; margin-bottom: 6px}
+        #suggestions > .item {border-radius: 2px; float: left; margin: 10px 10px 3px 0; height: 14em; padding: 5px; width: 9.1em}
+        #suggestions > .item .poster {background-size: 100% auto;background: no-repeat center;float: left; height: 61%; width: 100%}
+        #suggestions > .item .cost span:first-child {float: left; font-size: 1em; margin:13px 8px}
+        #suggestions > .item .title {float: left; height: 1.1em; margin-top: 5px; text-transform: capitalize; width: 100%}
+        #suggestions > .item .orders {float: right; font-size: 1em}
+        #suggestions > .item .orders span {float: none}
+        #suggestions > .item .amount {margin-top: 0}
+        #suggestions > .item .currency {margin: 0}
+        #suggestions > .item .button {font-size: 1.2em; margin-top: 6px; text-shadow: none}
+        #suggestions > .item {color: #FCE5DD}
+        #suggestions > .item .title, #content .item .amount, #content .item .currency {color: #300c00}
+        #suggestions > .item .orders {color: #BB7A66}
+        #movie .button {float: right; margin-right: 1em}
+        #content .main-title {padding-left: 2%; width: 98%}
+        #movie .poster {height: 18em; width: 15em}
+        #movie > div > .cost {color: #BB7A66}
+    </style>
+    <div class="wrapper">
+        <div id="content">
+            <div class='main-title' style="font-size: 1.3em; text-transform: capitalize">{{ current_series.title }} - saison {{ current_series.season }}</div>
+            <div class="stage">
+                <div id='movie' style="padding-left: 2%; width: 98%">
+                    <div>
+                        <span class="cost">
+                            <span class="value">  {{ current_series.episode_cost }} </span>
+                            <span class="currency"> Fr / Ep. </span>
+                        </span>
+                        <div class="clear"></div>
+                    </div>
+                    <div style="margin-top: 15px">
+                        <div class="poster">
+                            <img src="{{ current_series.poster.small_url }}" />
+                        </div>
+                        <div class="categories">
+                            <strong style="float: left"> Catégorie(s): </strong>
+                            <span style="float: left; line-height: 1.4em; margin-left: 1em; width: 60%">{{ current_series.categories_to_string }}</span>
+                        </div>
+                        <div class='synopsis has-shade' data-role="collapsible" style="border: none; clear: both; float: left;margin-left: 0; width: 99%">
+                            <h6 style="">Synopsis</h6>
+                            {{ current_series.synopsis|safe }}
+                        </div>
+                    </div>
+                    <div class="episodes-list">
+                        {% for episode in episodes %}
+                            <div class="episode">
+                                <span class="name"> {{ episode.title }} </span>
+{#                                <span class="cost"> {{ episode.price }} Fr </span>#}
+                                {% if not request.user.is_authenticated %}
+                                    <div class='connect button default'> Commander </div>
+                                {% else %}
+                                    {% if request.user.has_pending_order %}
+                                        <div class='processing button default'> Commander </div>
+                                    {% else %}
+                                        <div class='order button default' direct='' style="margin-top: 0" movieid='{{ episode.id }}' title="{{episode.title}}" category='1' cost='{{ episode.price }}' size='{{ episode.size }}' type='series' hd='{{ episode.HD }}' adult="{{ episode.adult }}" extra="{{ episode.extra }}" bgImg="url('{{ current_series.poster.small_url }}')">Commander</div>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="suggestions" style="padding-left: 1em">
+                    <div class="title" style="font-size: 1.3em; padding-bottom: 2px"> Suggestions </div>
+                    {% for series in suggestions %}
+                        <div class="item has-shade">
+                            <a href="{% url 'series_detail' series.slug %}" title="{{ series.title }} - saison {{ series.season }}" class="poster" style='background-image: url("{{ series.poster_small }}")'></a>
+                            <div class='title has-faded-edge'>
+                                <span> {{ series.title }} - saison {{ series.season }}</span>
+                                <span class="faded-edge"></span>
+                            </div>
+
+                            <div class=" text-has-shade" style="float: left; font-size: 10px; margin-top: 7px; width: 100%">
+                                <span class='amount'> {{ series.episode_cost }} </span>
+                                <span class="currency">Fr/Ep</span>
+                                <span class="orders"> {{ series.orders }} </span>
+                                <a  href="{% url 'series_detail' series.slug %}" class='button default' style="text-decoration: none; width: 7em">Commander</a>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                    {% endfor %}
+
+
+                    <div class="item has-shade">
+                        <a class='poster detail' style='background-image: url("{% static 'media/images/movies/1/main.jpg' %}");' target="_blank"></a>
+                        <div class='title text-has-shade has-faded-edge'>
+                            <span>my film </span>
+                            <span class="faded-edge"></span>
+                        </div>
+                        <div class=" text-has-shade" style="float: left; font-size: 10px; margin-top: 7px; width: 100%">
+                            <span class='amount'>300</span>
+                            <span class="currency">Fr</span>
+                            <span class="orders"> 5200</span>
+                            <button  class='connect button default' target="_blank"> Commander </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+    <div id="lightbox" class="hidden">
+        <div id="overlay" class="translucent"></div>
+        <div class="wrapper">
+            <div class="dialog has-shade">
+                <div class="stage">
+                    <div id="avatar"></div>
+                    <div style="font-size: 16px; text-align: center">
+                        <a href="#" class="login">Connectez-vous</a> pour pouvoir commander
+                    </div>
+                    <div style="border-top: 1px solid #FCE5DD; margin-top: 20px; padding-top: 5px; text-align: right">
+                        Pas encore de compte ? <a href="{% url 'me:register' %}">Inscrivez-vous</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

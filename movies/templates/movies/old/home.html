@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page_title %} <title>{{ service.project_name }} - {% trans "Home" %}</title> {% endblock %}
+{% block custom_head %}
+    {% if fb_share_item %}
+        <meta property="og:image" content="{{ fb_share_item.poster.url }}"/>
+    {% endif %}
+    <style>
+        #top nav.menu,  ul#auth {margin-top: 6px}
+        #top nav.categories {display: block}
+        .main.item .button {margin-top: -3px}
+    </style>
+{% endblock %}
+{% block content %}
+    {% include 'snippets/fb_sdk.html' %}
+    <div id="content" class="media-list">
+        <div class="wrapper" style="padding-bottom: 45px">
+            {% if request.user.is_authenticated and recommended_items|length > 0 %}
+                <section class="subtle-shade">
+                    <header>{% trans "Recommended for you" %}</header>
+                    <table class="items">
+                        {% for row in recommended_items %}
+                            <tr>
+                                {% for item in row  %}
+                                    <td>
+                                        <div class='item media'>
+                                            {% if item.season %}
+                                                <a href="{% url 'movies:series_detail'  item.slug  %}" target="_blank" class='poster detail inner-shade'
+                                                   {% if item.poster %} style='background-image: url("{{ item.poster.small_url}}");' {% endif %}></a>
+                                            {% else %}
+                                                <a href='{% url 'movies:movie_detail' item.slug %}' target="_blank" class='poster detail inner-shade'
+                                                   {% if item.poster %} style='background-image: url("{{ item.poster.small_url}}");' {% endif %}></a>
+                                            {% endif %}
+                                            <div class='title has-faded-edge'>{{ item.title }}</div>
+                                            {% include 'movies/old/snippets/default_media_actions.html' %}
+                                        </div>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    <div class="clear"></div>
+            </section>
+            {% endif %}
+            <section class="tpl" data-order_of_appearance="">
+                <header><span></span>
+                <a>{% trans "Show all" %}</a>
+                </header>
+                <table class="items">
+                    <td class="tpl">
+                        <div class='item media'>
+                            {% include 'movies/old/snippets/tpl_media_actions.html' %}
+                        </div>
+                    </td>
+                </table>
+                <div class="spinner"></div>
+            </section>
+            <div class="clear"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block sub_dialogs %}
+    {# TODO: Implement dialog below when there are sufficient content vendors. It should appear on a VOD Operator that does not have enough content. #}
+{#    <div class="dialog suggest-content-vendors has-shade">#}
+{#        <div class="stage" style="height: 290px; padding: 10px 15px">#}
+{#            <h2>{% trans "Hmmm ... seems you lack content, get videos from our vendors on our Market place." %}</h2>#}
+{#            <a href="#">{% trans "Great! Take me there." %}</a>#}
+{#            <img src="{% static 'img/Newsletter_Icon_transp.png' %}" width="135" style="margin-left: 190px"/>#}
+{#            <button class="default close" style="float: right">{% trans "No, It's OK" %}</button>#}
+{#            <div>#}
+{#                <input id="refuse-newsletter" type="checkbox" style="float: left; margin: 5px 6px 0 0"/>#}
+{#                <label style="width: 360px">{% trans "Do not show this again." %}</label>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        (function() {
+            $('tr td div.four-img').live('mouseenter' ,function() {
+                $(this).addClass('hover')
+            }).live('mouseleave', function() {
+                $(this).removeClass('hover')
+            });
+            {% if request.GET.accountCreated %}
+                $('.top-notice-ctnr span').html("{% trans "Your account was successfully created." %}");
+                $('.top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
+            {% endif %}
+            {% if request.GET.bundleChosen %}
+                $('#top-notice-ctnr span').html("{% trans "Your bundle was successfully activated." %}");
+                $('#top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
+            {% endif %}
+            $('div#lightbox .dialog.confirm-adult button.confirm').click(function() {
+                $('body, button').css('cursor', 'wait');
+                $.getJSON("{% url 'shavida:authorize_adult' %}", null, function (data) {
+                    $('body, button').css('cursor', 'default');
+                    if (data.error) alert(data.error);
+                    else {
+                        {% if latest_prepayment and latest_prepayment.amount >= 2500 and latest_prepayment_days_left >= 0 %}
+                            window.location = "{% url 'movies:home' %}#adult_autorized";
+                        {% else %}
+                            window.location = "{% url 'movies:bundles' %}";
+                        {% endif %}
+                    }
+                })
+            });
+            function applySectionTemplate($tpl, category) {
+                $tpl.attr('data-order_of_appearance', category.id);
+                $tpl.find('header a').attr('href', "/category/" + category.slug);
+                return $tpl
+            }
+            var movieCategories = [];
+            {% for category in all_categories %}
+                var category = {
+                    id : "{{category.id}}",
+                    title : "{{ category.title }}",
+                    slug : "{{ category.slug }}",
+                    previewsTitle : "{{ category.previews_title | safe }}"
+                };
+                movieCategories.push(category);
+            {% endfor %}
+
+            ikwen.mediaEndpoint = "{% url 'movies:get_recommended_for_single_category' %}";
+            {% if not request.user.is_authenticated %}
+                ikwen.mediaEndpoint = "{% url 'movies:get_media' %}";
+            {% endif %}
+            ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+            movieCategories.splice(0,1);
+            ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+            movieCategories.splice(0,1);
+            $(window).scroll(function() {
+                var scrollTop = $(this).scrollTop();
+                if ($(document).height() - $(this).height() - scrollTop <= $('footer').height()) {
+                    if (movieCategories.length == 0) return;
+	                ikwen.listItemsForHome(ikwen.mediaEndpoint, movieCategories[0], applySectionTemplate);
+                    movieCategories.splice(0,1)
+                }
+            });
+            function shuffle(array) {
+                var counter = array.length, temp, index;
+                while (counter--) {index = (Math.random() * counter) | 0;
+                    temp = array[counter];
+                    array[counter] = array[index];
+                    array[index] = temp;
+                }
+                return array;
+            }
+            var td1 = $('<td col="1"></td>'),
+                td2 = $('<td col="2"></td>'),
+                td3 = $("<td colspan='2' rowspan='2' col='3'></td>");
+            var topPos = [];
+                td1.append($('table.top.items tr:first-child td[col=1]').html());
+                td2.append($('table.top.items tr:first-child td[col=2]').html());
+                td3.append($('table.top.items tr:first-child td[col=3]').html());
+
+            topPos.push(td1);
+            topPos.push(td2);
+            topPos.push(td3);
+            shuffle(topPos);
+            $('table.top.items tr:first-child td').remove();
+            for (var i=0; i<=2; i++) {
+                $('table.top.items tr:first-child').append(topPos[i])
+            }
+            $("div#side-nav nav.smart-categories ul").find('li.recommanded').addClass('current')
+        })()
+    </script>
+   {{ config.scripts|safe }}
+{% endblock %}

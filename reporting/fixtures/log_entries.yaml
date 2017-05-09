@@ -1,0 +1,47 @@
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e083
+    bytes: 410000
+    duration: 3
+
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e083
+    bytes: 320000
+    duration: 3
+
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e081
+    bytes: 330000
+    duration: 3
+
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e081
+    bytes: 450000
+    duration: 3
+
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e082
+    bytes: 405000
+    duration: 3
+
+- model: reporting.streamlogentry
+  fields:
+    member: 56eb6d04b37b3379b531e011
+    media_type: movie
+    media_id: 56eb6d04b37b3379b531e082
+    bytes: 360000
+    duration: 3

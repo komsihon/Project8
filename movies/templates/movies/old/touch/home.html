@@ -1,0 +1,90 @@
+{% extends "touch_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block content %}
+    <style>
+        .ui-content {background: #FFF; overflow-x: initial}
+        #content > .item .currency {margin: 0}
+        #content > .item .amount {margin: 0}
+        #content > .item a.button {padding: 7px 23px 7px}
+        #categories .categories li {cursor: pointer}
+        #categories .categories li span {margin: .5em}
+        .ui-listview > .ui-li-static {padding:.8em 1em 0}
+    </style>
+    <div data-role="panel" data-display="overlay" id="categories">
+        <h3>Categories</h3>
+        <ul  data-role="listview" data-inset="true" class='categories text-has-shade'>
+            {% for category in main_categories %}
+                <li val="{{ category.id }}">
+                    <span class='icon' style="{{ category.icon_position }}"></span>
+                    <span class='text' style="margin: .5em 0 0 0">{{ category.title }}</span>
+                </li>
+            {% endfor %}
+            {% for category in categories %}
+                {% if forloop.counter == 1 %}
+                    <li class="current" val="{{ category.id }}">
+                {% else %}
+                    <li val="{{ category.id }}">
+                {% endif %}
+                    <span class='icon' style="{{ category.icon_position }}"></span>
+                    <span class='text' style="margin: .5em 0 0 0">{{ category.title }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div data-role="content" id="content" style="float:left; width: 100%">
+
+        <div class="item has-shade tpl">
+            <a class='poster detail' href="{% url 'movie_detail' 'movie_slug' %}" style='background-image: url("{% static 'media/images/movies/1/main.jpg' %}");'></a>
+            <div class='title text-has-shade has-faded-edge'>
+                <span>my film </span>
+                <span class="faded-edge"></span>
+            </div>
+            <div class=" text-has-shade" style="float: left; font-size: 10px; margin-top: 7px; width: 100%">
+                <span class='amount'>300</span>
+                <span class="currency">Fr</span>
+                <span class="orders"> 5200 fois</span>
+                {% if not request.user.is_authenticated %}
+                    <a class='connect button default'> Commander </a>
+                {% else %}
+                    {% if request.user.has_pending_order %}
+                        <a class='processing button default'> Commander </a>
+                    {% else %}
+                        <a class='order button default'> Commander </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+    <div class="spinner hidden"></div>
+    <div class="clear"></div>
+    <script type="text/javascript">
+        (function() {
+            $('a.icon.items-count').show();
+            $(window).scroll(function() {
+                var scrollTop = $(this).scrollTop();
+
+                if ($(document).height() - $(this).height() - scrollTop <= $('#footer').height()) {
+	                cvb.showNextPage()
+                }
+            })
+            // get the list of movies from our json request
+            cvb.mediaEndpoint = "{% url 'get_movies' %}"
+            $('div#categories .categories li').click(function() {
+                $('div#content .item:not(.tpl), div#content .no-result').remove()
+                cvb.nextStartIndex = 0
+                cvb.dataSourceIsEmpty = false
+                cvb.movies = []
+                $('div#filter li').removeClass('current')
+                $(this).addClass('current')
+                cvb.currentCategoryId = $(this).attr('val')
+			    cvb.listItems(cvb.mediaEndpoint, cvb.currentCategoryId)
+            })
+            cvb.TOP_20 = 5
+            cvb.currentCategoryId = cvb.TOP_20
+            cvb.listItems(cvb.mediaEndpoint, cvb.currentCategoryId, 0)
+        })()
+    </script>
+{% endblock %}

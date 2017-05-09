@@ -1,0 +1,106 @@
+{% extends "touch/base.html" %}
+{% load i18n %}
+{% load humanize %}
+{% load staticfiles %}
+{% block meta %}
+<meta name="abstract" content="CINEMAX.CLUB - Téléchargement sans internet - Les forfaits"/>
+{% endblock %}
+{% block custom_head %}
+    <style>
+        table {border-collapse: collapse}
+        table td {border: 1px solid #FFE3BE;text-align: center; padding: 1.3em .5em;}
+        table tbody tr td:last-child {padding:0}
+        table thead td {border-bottom: solid 1px #DDA67B; background: #FFE3BE;font-size: 1em;font-weight: bold; text-align: center}
+        table tbody td a {text-decoration: none; padding: 1em .5em}
+        table tbody td a.button.confirm {float: none; padding: .8em 1.5em}
+    </style>
+{% endblock %}
+{% block content %}
+    <div id="content">
+        <div class="wrapper">
+            <p style="clear: both; font-size: 1em; padding-top: 1em">
+                Choisis ton forfait maintenant et <strong title="En savoir plus"><a href="{% url 'flat_page' 'faq' %}">paie lors du retrait</a></strong> de tes films
+                dans un point de distribution proche de chez toi - <a id="find-pos" href="#">Trouver un point proche</a>
+            </p>
+            <div class="dialog bundles has-shade" style="width: 100%">
+                <div class="stage" style="padding: 1em 1em .5em; height: 343px; width: 98%">
+                    <table style="width: 95%">
+                        <thead>
+                            <tr>
+                                <td>Volume</td>
+                                <td>Prix</td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bundle in bundles %}
+                                <tr volume="{{ bundle.volume }}" bundle-cost="{{ bundle.cost }}">
+                                    <td><strong>{{ bundle.volume }} Giga</strong></td>
+                                    <td class="minor">
+                                        <strong>&nbsp;{{ bundle.cost|intcomma }}</strong> Fcfa
+                                    </td>
+                                    <td>
+                                        {% if request.user.is_authenticated and request.user.account_type == 'Customer' %}
+                                            <a  class="button confirm buy" href="#confirm-panel"  data-position-to="window"  data-rel="popup" data-transition="pop"
+                                                bundleCost="{{ bundle.cost }}" bundleId="{{ bundle.id }}" volume="{{ bundle.volume }}">Choisir</a>
+                                        {% else %}
+                                            <a href="#" class="button confirm connect">Je prends</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p style="clear: both; padding-top: 24px">
+                <ins>Un forfait gratuit</ins> d'un giga (1Go) vous est offert à votre inscription uniquement sur un point de distribution. <a id="find-pos" href="#">Trouver un point proche</a>
+            </p>
+            <div class="clear"></div>
+        </div>
+        <div data-role="popup" id="confirm-panel" data-theme="a" class="ui-corner-all"  style="padding: 1em">
+            <div style="font-size: 1.7em">
+                Confirmez-vous ce choix ?
+            </div>
+            <p class="notice" style="clear: both; float: left; margin:  10px 0">
+                En confirmant, vous vous engagez à payer au point de retrait des films.
+            </p>
+            <p class="warning failure hidden" style="clear: both; float: left; margin:  0 0 5px; padding: 5px">
+                Attention! Le volume de votre sélection est supérieur à celui de votre forfait, votre panier sera vidé.
+            </p>
+            <div class='controls' style="border-top: solid 1px #FCE5DD; clear: both; margin-top: 15px; padding-top: 5px">
+                <div class="button default"  style="float: right; margin-right: 15px">
+                    Annuler
+                </div>
+                <a class="button confirm" style="float: right; margin-top: 0; margin-right: 15px">
+                    Confirmer
+                </a>
+            </div>
+
+            <div class="clear"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_js %}
+    <script type="text/javascript">
+        (function() {
+            var clearCart = false;
+            $('.button.buy').click(function() {
+                var bundleId = $(this).attr('bundleId'),
+                    volume = parseInt($(this).attr('volume')) * 1000,
+                    href = "{% url 'me:choose_bundle' %}?bundle_id=" + bundleId,
+                    usedSpace = cvb.getUsedQuota();
+                if (usedSpace > volume) {
+                    clearCart = true
+                    $('#confirm-panel .warning.failure').show()
+                } else {
+                    clearCart = false
+                    $('#confirm-panel .warning.failure').hide()
+                }
+                $('#confirm-panel .controls a.button.confirm').attr('href', href)
+            })
+        })()
+    </script>
+    {% include 'snippets/google_analytics.html' %}
+{% endblock %}

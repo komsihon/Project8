@@ -1,0 +1,110 @@
+{% extends "touch_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block content %}
+    <style type="text/css">
+        #suggestions {clear: both; float: left; margin-top: 15px; width: 100%}
+        #suggestions > .title {border-bottom: 1px solid #FCE5DD; margin-bottom: 6px}
+        #suggestions > .item {background: #FFF;  border-radius: 2px; float: left; margin: 10px 10px 3px 0; height: 14em; padding: 5px; width: 9.1em}
+        #suggestions > .item .poster {background: #FFF; background-size: 100% auto;background: no-repeat center;float: left; height: 61%; width: 100%}
+        #suggestions > .item .cost span:first-child {float: left; font-size: 1em; margin:13px 8px}
+        #suggestions > .item .title {float: left; height: 1.1em; margin-top: 5px; text-transform: capitalize; width: 100%}
+        #suggestions > .item .orders {float: right; font-size: 1em}
+        #suggestions > .item .orders span {float: none}
+        #suggestions > .item .amount {margin-top: 0}
+        #suggestions > .item .currency {margin: 0}
+        #suggestions > .item .button {font-size: 1.2em; margin-top: 6px; text-shadow: none}
+        #suggestions > .item {color: #FCE5DD}
+        #suggestions > .item .title, #content .item .amount, #content .item .currency {color: #300c00}
+        #suggestions > .item .orders {color: #BB7A66}
+        .categories ul {margin: 1em 1.3em; }
+        #movie .poster {background: #FFF; height: 18em; width: 15em}
+        .categories ul li {list-style: none; margin-top: .7em}
+        #avatar {background: url('{% static 'media/images/login-avatar.jpg' %}') no-repeat center; height: 150px; margin: auto; width: 100%}
+    </style>
+    <div class="wrapper">
+        <div data-role="content"  id="content" style="padding-left: 1em;">
+            <div class='main-title' style="font-size: 1.3em; text-transform: capitalize">{{ movie.title }}</div>
+            <div class="stage">
+                <div id='movie' style="width: 100%">
+                    <div>
+                        <span class="cost" style="color: #BB7A66;">
+                            <span class="value">{{ movie.price}}</span>
+                            <span class="currency"> Fr </span>
+                        </span>
+                        {% if not request.user.is_authenticated %}
+                            <a class='connect button default'> Commander </a>
+                        {% else %}
+                            {% if request.user.has_pending_order %}
+                                <a class='processing button default'> Commander </a>
+                            {% else %}
+                                <span class='order button default' title="{{ movie.title }}" movieId="{{ movie.id }}" cost='{{ movie.price }}' category='{{ movie.category }}' size='{{ movie.size }}' bgImg="url('{{ movie.poster.small_url }}')"  hd='{{ movie.HD }}' adult="{{ movie.adult }}" extra="{{ movie.extra }}" type="movie">Commander</span>
+                            {% endif %}
+                        {% endif %}
+                        <div class="clear"></div>
+                    </div>
+                    <div style="margin-top: 15px">
+                        <div class="poster">
+                            <img src="{{ movie.poster.small_url }}" />
+                        </div>
+                        <div class="categories">
+                            <strong style="float: left"> Catégorie(s): </strong>
+                            <span style="float: left; line-height: 1.4em; margin-left: 1em; width: 60%">{{ movie.categories_to_string }}</span>
+                        </div>
+                        <div class='synopsis has-shade' data-role="collapsible" style="border: none; clear: both; float: left;margin-left: 0; width: 99%">
+                            <h6 style="">Synopsis</h6>
+                            {{ movie.synopsis|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="suggestions">
+                    <div class="title" style="font-size: 1.3em; padding-bottom: 2px"> Suggestions </div>
+                    {% for movie in suggestions %}
+                        <div class="item has-shade">
+                            <a href="{% url 'touch:movie_detail' movie.slug %}" class="poster detail" style='background-image: url("{{ movie.poster_small }}")'></a>
+                            <div class='title has-faded-edge'>
+                                <span> {{ movie.title }} </span>
+                                <span class="faded-edge"></span>
+                            </div>
+                            <div style="float: left;  font-size: 10px; margin-top: 7px; width: 100%">
+                                <span class='amount'> {{ movie.price }} </span>
+                                <span class="currency">Fr</span>
+                                <span class="orders"> {{ movie.orders }}</span>
+                                {% if not request.user.is_authenticated %}
+                                    <button class='connect button default'> Commander </button>
+                                {% else %}
+                                    {% if request.user.has_processing_order or request.user.has_pending_order %}
+                                        <button class='processing button default'> Commander </button>
+                                    {% else %}
+                                        <button class='order button default' title="{{ movie.title }}" movieId="{{ movie.id }}" cost='{{ movie.price }}' category='{{ movie.category }}' size='{{ movie.size }}' bgImg="url('{{ movie.poster_small }}')" hd="{{ movie.HD }}" adult="{{ movie.adult }}" extra="{{ movie.extra }}" type='movie'>Commander</button>
+                                    {% endif %}
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+    <div id="lightbox" class="hidden">
+        <div id="overlay" class="translucent"></div>
+        <div class="wrapper">
+            <div class="dialog has-shade">
+                <div class="stage">
+                    <div id="avatar"></div>
+                    <div style="font-size: 16px; text-align: center">
+                        <a href="#" class="login">Connectez-vous</a> pour pouvoir commander
+                    </div>
+                    <div style="border-top: 1px solid #FCE5DD; margin-top: 20px; padding-top: 5px; text-align: right">
+                        Pas encore de compte ? <a href="{% url 'touch:register' %}">Inscrivez-vous</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'touch/movies/snippets/base_handlers.html' %}
+    {% include 'touch/movies/snippets/touch_global_handlers.html' %}
+{% endblock %}

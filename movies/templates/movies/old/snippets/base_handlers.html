@@ -1,0 +1,38 @@
+<script type="text/javascript">
+    (function() {
+        /**********************************************************************/
+        /************************   BASE HANDLERS    ************************/
+        /**********************************************************************/
+        var uiStates = [];
+        $('a.ui-btn.ui-corner-all.ui-icon-search.ui-btn-icon-notext').click(function() {
+            $(this).hide();
+            $("form#search input.radix").show();
+            $('#logo').hide();
+            history.pushState('search', null, '#&ui-state=search');
+            uiStates.push('search')
+        });
+        $('.ui-btn.ui-corner-all.ui-icon-bullets.ui-btn-icon-notext').click(function() {
+            history.pushState('categories', null, '#&ui-state=categories');
+            uiStates.push('categories')
+        });
+        $('.ui-btn.ui-corner-all.ui-icon-gear').click(function() {
+            history.pushState('cart', null, '#&ui-state=cart');
+            uiStates.push('cart')
+        });
+        window.onpopstate = function(e) {
+            if (e.state == null) return;
+            var state = uiStates.pop();
+            if (state == 'search') {
+                $('.ui-input-search.ui-body-inherit.ui-corner-all.ui-shadow-inset.ui-input-has-clear').hide();
+                $('a.ui-btn.ui-corner-all.ui-icon-search.ui-btn-icon-notext').show();
+                $('#logo').show()
+            } else if (state == 'categories') {
+
+            } else if (state == 'cart') {
+
+            } else if (state == 'user-menu') {
+
+            }
+        }
+    })()
+</script>

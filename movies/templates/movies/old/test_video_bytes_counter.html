@@ -1,0 +1,63 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title> Cinemax Club | 404 Not found </title>
+        <style>
+            #notice {float: left; margin-top: 140px}
+            #branding {float: right; width: 300px}
+            #branding img {width: 100%}
+            #slogan {clear: both; color: #BB7A66; font: normal 17px arial; margin: 5px auto 0; width: 100%}
+        </style>
+        <script src="{% static 'shavida/js/jquery-1.8.2.min.js' %}"></script>
+        <script src="{% static 'shavida/js/dkrypt-util.js' %}"></script>
+    </head>
+    <body style="background: #fff">
+{#        <video id="player" data-size="19.8" src="http://localhost/vodsrc/PSquare-Collabo-(ft.Don-Jazzy).mp4" muted controls width="720" height="420"></video>#}
+        <video width="352" height="198" controls>
+            <source src="http://41.223.28.20:8888/hls/creolink+NerveFRENCH21H.mp4/index.m3u8" type="application/x-mpegURL">
+        </video>
+<div id="log" style="float: right; height: 540px; overflow: auto; width: 420px">
+
+        </div>
+        <script>
+            (function() {
+                var count = true,
+                    durationPreviouslyLoaded = 0,
+                    bytesPreviouslyLoaded = 0,
+                    totalLoaded = 0;
+                $('video').bind('progress', function(e) {
+                    var range = 0;
+                    var bf = this.buffered;
+                    var time = this.currentTime;
+                    var duration = this.duration;
+                    var size = $(this).data('size') * 1000000;
+                    try {
+                        while(!(bf.start(range) <= time && time <= bf.end(range))) {
+                            range += 1;
+                        }
+                    } catch(e) {
+                        return
+                    }
+{#                    var loadStartPercentage = bf.start(range) / this.duration;#}
+{#                    var loadEndPercentage = bf.end(range) / this.duration;#}
+{#                    var loadPercentage = loadEndPercentage - loadStartPercentage;#}
+                    if (count) {
+                        count = false;
+                        setTimeout(function() {
+                            var durationLoaded = bf.end(range) - bf.start(range);
+                            var durationLatelyLoaded = durationLoaded - durationPreviouslyLoaded;
+                            durationPreviouslyLoaded = durationLoaded;
+                            var bytesLoaded = durationLoaded / duration * size;
+                            var bytesLatelyLoaded = Math.round(durationLatelyLoaded / duration * size);
+                            totalLoaded += bytesLatelyLoaded;
+                            $('<p>loaded ' + bytesLatelyLoaded + ' Bytes</p>').prependTo('#log');
+                            count = true
+                        }, 3000)
+                    }
+                })
+            })()
+        </script>
+    </body>
+</html>

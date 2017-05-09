@@ -1,0 +1,86 @@
+{% load i18n static %}
+<div class="parallax-bg" {% if media.poster.name %}style="background-image: url({{ media.poster.url }})"{% endif %} data-swiper-parallax="-23%"></div>
+<div class="gradient-bg"></div>
+<div class="swiper-wrapper">
+    <div class="swiper-slide ghost"></div>
+    <div class="swiper-slide ghost"></div>
+    <div class="swiper-slide ghost"></div>
+    <div class="swiper-slide ghost"></div>
+    <div class="swiper-slide content">
+        <div class="main-actions{% if settings.IS_CONTENT_VENDOR %} order{% endif %}">
+            <div class="container">
+                {% if media.trailer_resource %}
+                    <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ media.id }}" title="{% trans "Watch trailer" %}">
+                        <i class="glyphicon glyphicon-eye-open"></i> {% trans "Trailer" %}
+                    </button>
+                {% endif %}
+                {% if not media.season %}
+                    {% if settings.IS_VOD_OPERATOR %}
+                        <button id="{{ media.id }}" class='btn btn-sm play-media{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Watch streaming" %}"
+                                data-id="{{ media.id }}" data-is_adult="{{ media.is_adult }}" data-type="movie">
+                            <i class="glyphicon glyphicon-play"></i> {% trans "Stream" %}
+                        </button>
+                    {% else %}
+                        <button class='btn btn-sm order-media {{ media.id }}{% if user.is_anonymous %} connect{% elif user.customer.get_has_pending_update %} processing{% else %} confirm{% endif %}' title="{% trans "Order" %}"
+                            data-title="{{ media.title }}" data-id='{{ media.id }}' data-load='{{ media.load }}' data-price="{{ media.price }}"
+                            data-poster="{% get_media_prefix %}{{ media.poster.small_name }}" data-is_adult="{{ media.is_adult }}" data-type="{{ media.type }}">
+                            <i class="glyphicon glyphicon-shopping-cart"></i>{% trans "Order" %}
+                        </button>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="container">
+                {% if settings.IS_GAME_VENDOR %}
+                    <p class="media-price text-muted text-right">{{ config.currency_symbol }} {{ media.price }}</p>
+                {% endif %}
+                <h4 class="item-detail-title">{{ media.title }} {% if media.season %}- {% trans "Season" %} {{ media.season }}{% endif %}</h4>
+                <p class="item-detail-content">{{ media.synopsis|safe }}</p>
+            </div>
+        </div>
+        {% if media.season %}
+            <div class="container">
+                <ul class="episode-list">
+                {% for episode in episodes %}
+                    <li class="episode">
+                        <span class="name">
+                            <span> {{ episode.title }} </span>
+                            {% if settings.IS_CONTENT_VENDOR %}<span>: {{ episode.display_load }} </span> {% endif %}
+                        </span>
+                        {% include 'movies/snippets/series_episode_actions.html' %}
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <section class="media-list">
+            <h3 style="font-size: 1em; font-weight: 700; margin-left: 15px">{% trans "Suggestions" %}</h3>
+            <div class="row swiper-container suggestions">
+                <div class="swiper-wrapper">
+                    {% for item in suggestions  %}
+                        <div class="swiper-slide">
+                            <div class='item'>
+                                {% if item.season %}
+                                    <div class='poster detail' style='background-image: url("{{ item.poster.small_url}}");'>
+                                        <span class='view-details' data-type="series" data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                    </div>
+                                {% else %}
+                                    <div class='poster detail' style='background-image: url("{{ item.poster.small_url}}");'>
+                                        <span class='view-details' data-type="movie" data-id="{{ item.id }}" data-slug="{{ item.slug }}"></span>
+                                    </div>
+                                {% endif %}
+                                <div class='title has-faded-edge'>{{ item.title }}</div>
+                                {% include 'movies/snippets/default_media_actions.html' %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+            <div class="clearfix"></div>
+        </section>
+        <div class="clearfix"></div>
+    </div>
+</div>

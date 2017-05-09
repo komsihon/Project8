@@ -1,0 +1,67 @@
+{% extends 'movies/base_bs.html' %}
+{% load i18n staticfiles humanize auth_tokens %}
+
+{% block page_title %}
+<title>{% trans "Bundles" %} - {{ service.project_name }}</title>
+{% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+        <div class="container">
+            <h2 class="main-title">{% trans "Choose your bundle" %}</h2>
+            <div class="row">
+                {% for bundle in bundles %}
+                    <div class="col-sm-4 col-md-3">
+                        <div class="bundle">
+                            {% if settings.IS_VOD_OPERATOR %}
+                                <h4 class="title">{{ bundle.duration }} {% trans "days" %}</h4>
+                            {% else %}
+                                <h4 class="title">{{ bundle.quantity }} {{ settings.SALES_UNIT_STR_XS }}</h4>
+                            {% endif %}
+                            <div class="about" style="background: url('{{ bundle.movie.poster.small_url }}')">
+                                <ul>
+                                    <li>{{ bundle.comment }}</li>
+                                </ul>
+                                <div style="padding: 0 15px; text-align: center">
+                                    <span class="cost">{{ config.currency_symbol }} {{ bundle.cost|floatformat:config.decimal_precision|intcomma }}</span>
+                                    {% if user.is_authenticated %}
+                                    <button class="btn btn-success btn-block btn-sm cta order"
+                                            data-id="{{ bundle.id }}" data-duration="{{ bundle.duration }}">{% trans "Choose" %}</button>
+                                    {% else %}
+                                        <a href="{% url 'ikwen:sign_in' %}?next={{ request.get_full_path }}" class="btn btn-sm btn-success cta" style="width: 100%">
+                                            {% trans "Choose" %}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script type="text/javascript">
+        (function() {
+            var clearCart = false;
+            $('button.order').click(function() {
+                $('#payment-methods').modal('show');
+                var bundleId = $(this).data('id'),
+                    volume = parseInt($(this).data('volume')) * 1000,
+                    usedQuota = ikwen.getUsedQuota();
+                $('#bundle-id').val(bundleId);
+                if (usedQuota > volume) {
+                    clearCart = true;
+                    $('.dialog.confirm-bundle .warning.failure').show()
+                } else {
+                    clearCart = false;
+                    $('.dialog.confirm-bundle .warning.failure').hide()
+                }
+            });
+            $('#side-nav').remove()
+        })()
+    </script>
+{% endblock %}

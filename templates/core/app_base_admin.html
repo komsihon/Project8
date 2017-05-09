@@ -1,0 +1,86 @@
+{% extends "core/base_admin.html" %}
+{% load i18n auth_tokens %}
+
+{% block admin_nav %}
+    <div id="admin-nav" class="edge-panel-left">
+        <div class="wrapper">
+            <div class="stage">
+                <div class="menu">
+                    <ul class="nav nav-pills nav-stacked">
+                        {% if perms.trade.ik_view_dashboard %}
+                            <li role="presentation" class="dashboard">
+                                <a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a>
+                            </li>
+                        {% endif %}
+                        <li role="presentation" class="data-management">
+                            <a href="{% url 'admin:index' %}">{% trans "Data Management" %}</a>
+                        </li>
+                    </ul>
+                    {% if perms.accesscontrol.sudo %}
+                        <div class="divider"></div>
+                        <ul class="nav nav-pills nav-stacked">
+                            <li role="presentation" class="flatpages">
+                                {% url 'ikwen:flatpage_list' as flatpage_list_url %}
+                                <a href="{{ flatpage_list_url }}">{% trans "Pages" %}</a>
+                            </li>
+                            <li role="presentation" class="theming">
+                                <a href="{% url 'theming:theme_list' %}">
+                                    {% trans "Theming" %} <span class="label label-danger">New</span>
+                                </a>
+                            </li>
+                            <li role="presentation" class="community">
+                                {% url 'ikwen:community' as community_url %}
+                                <a href="{{ community_url }}">{% trans "Community" %}</a>
+                            </li>
+                        </ul>
+                        <div class="divider"></div>
+                        <ul class="nav nav-pills nav-stacked">
+                            {% if config.is_pro_version %}
+                                <li role="presentation" class="payment-means">
+                                    <a href="{% url 'billing:payment_mean_list' %}">
+                                        {% trans "Payment means" %} <span class="label label-danger">New</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li role="presentation" class="configuration">
+                                {% url 'ikwen:configuration' as configuration_url %}
+                                <a href="{{ configuration_url }}">{% trans "Configuration" %}</a>
+                            </li>
+                            <li role="presentation" class="invoices">
+                                {% url 'billing:invoice_list' as invoice_list_url %}
+                                <a href="{{ invoice_list_url|ikwenize }}"
+                                   target="_blank">{% trans 'Invoices' %}</a>
+                            </li>
+                            <li role="presentation" class="service-info">
+                                {% url 'ikwen:service_detail' service.id as service_detail_url %}
+                                <a href="{{ service_detail_url }}">{% trans "Info & Billing" %}</a>
+                            </li>
+                        </ul>
+                    {% endif %}
+                </div>
+                {% if filter and filter|length > 0 %}
+                    <ul class="nav nav-pills nav-stacked filter">
+                        {% for elt in filter %}
+                            <li>
+                                <a href="javascript:;" data-toggle="collapse"
+                                   data-target="#{{ elt.parameter_name }}" aria-expanded="true">
+                                    {{ elt.title }} <i class="fa fa-fw fa-caret-down"></i>
+                                </a>
+                                <ul id="#{{ elt.parameter_name }}" data-param="{{ elt.parameter_name }}"
+                                    class="nav nav-pills nav-stacked collapse in choices" aria-expanded="true"
+                                    style="padding-left: 15px">
+                                    {% for choice in elt.choices %}
+                                        <li data-value="{{ choice.0 }}">
+                                            <a href="javascript:;">{{ choice.1 }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="clear"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

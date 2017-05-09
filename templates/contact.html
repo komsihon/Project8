@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block meta %}
+<meta name="abstract" content="CINEMAX.CLUB - Contact"/>
+{% endblock %}
+{% block page_title %} <title> Cinemax Club | Contact </title> {% endblock %}
+{% block custom_head %}
+    <style type="text/css">
+        #search input {background: transparent}
+        #content {background: #FFF}
+        #navigation li.contact a {background: rgba(255, 255, 255, .09)}
+        .mean {color: #bbb; height: 75px; position: absolute; width: 330px}
+        .mean:hover {color: #300c00}
+        .mean .logo {background: url('{% static 'media/images/sprite-logos-inactive1.png'  %}'); height: 75px; width: 75px}
+        .mean:hover .logo {background: url('{% static 'media/images/sprite-logos.png'  %}')}
+        .text {font-size: 18px; margin: 30px 0 0 15px}
+         nav#sub, #sales-logout {display: none}
+    </style>
+{% endblock %}
+{% block content %}
+    <div id="content">
+        <div class="wrapper">
+            <section  style="min-height: 800px">
+                <div id="banner"  style='background-image: url("{{ page.banner.url }}")'>
+                    <div class="title" style="float: right; font-size: 72px; letter-spacing: 6px; margin: 130px 90px 0 0"> Contact </div>
+                </div>
+                <div id="intro" style="padding: 15px">{{ page.content|safe }}</div>
+                <div>
+                    {% if config.phone_orange %}
+                        <div id="orange" class="mean" style="margin: 85px 0 0 480px">
+                            <span class="logo" style="background-position: -183px 0"></span>
+                            <span class="text">{{ config.phone_orange }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.phone_mtn %}
+                        <div id="mtn" class="mean" style="margin: 150px 0 0 740px">
+                            <span class="logo" style="background-position: -96px 0"></span>
+                            <span class="text">{{ config.phone_mtn }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.phone_camtel %}
+                        <div id="camtel" class="mean" style="margin: 240px 0 0 450px">
+                            <span class="logo" style="background-position: -10px 0"></span>
+                            <span class="text">{{ config.phone_camtel }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.yahoo %}
+                        <div id="yahoo" class="mean" style="margin: 0 0 0 630px">
+                            <span class="logo" style="background-position: -590px 0"></span>
+                            <span class="text">{{ config.yahoo }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.gmail %}
+                    <div id="gmail" class="mean" style="margin: 15px 0 0 20px">
+                        <span class="logo" style="background-position: -270px 0"></span>
+                        <span class="text">{{ config.gmail }}</span>
+                    </div>
+                    {% endif %}
+                    {% if config.skype %}
+                        <div id="skype" class="mean" style="margin: 300px 0 0 150px">
+                            <span class="logo" style="background-position: -350px 0"></span>
+                            <span class="text">{{ config.skype }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.facebook %}
+                        <div id="facebook" class="mean" style="margin: 100px 0 0 180px">
+                            <span class="logo" style="background-position: -675px 0"></span>
+                            <span class="text">{{ config.facebook }}</span>
+                        </div>
+                    {% endif %}
+                    {% if config.viber %}
+                        <div id="viber" class="mean" style="margin: 330px 0 0 639px">
+                            <span class="logo" style="background-position: -430px 0"></span>
+                            <span class="text">{{ config.viber }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="clear"></div>
+            </section>
+            <div class="clear"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block custom_js %}
+    {% include 'snippets/google_analytics.html' %}
+{% endblock %}

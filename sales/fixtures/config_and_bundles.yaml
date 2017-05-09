@@ -1,0 +1,31 @@
+- model: sales.salesconfig
+  fields:
+    max_inactivity: 14
+
+- model: sales.retailbundle
+  pk: 579b6eb6d0e0124b37b33531
+  fields:
+    name: bundle1
+    quantity: 200    # 200 hours of broadcast
+    cost: 50000
+
+- model: sales.retailbundle
+  pk: 579b6eb6d0e0124b37b33532
+  fields:
+    name: bundle2
+    quantity: 500    # 500 hours of broadcast
+    cost: 100000
+
+- model: sales.vodbundle
+  pk: 579b624b37b33531eb6d0e01
+  fields:
+    volume: 2000
+    cost: 500
+    duration: 3
+
+- model: sales.vodbundle
+  fields:
+    volume: 14000
+    cost: 2500
+    duration: 3
+    adult_authorized: Yes

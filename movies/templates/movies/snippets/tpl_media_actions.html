@@ -1,0 +1,26 @@
+{% load i18n %}
+<div class='poster'>
+    <span class="view-details"></span>
+</div>
+<div class='title has-faded-edge'>
+    <span></span>
+    <span class="faded-edge"></span>
+</div>
+<div class="actions{% if settings.IS_CONTENT_VENDOR %} order{% endif %}">
+    {% if settings.IS_VOD_OPERATOR %}
+        <button class="btn btn-sm play-trailer" title="{% trans "Watch trailer" %}">
+            <i class="glyphicon glyphicon-eye-open"></i> {% trans "Trailer" %}
+        </button>
+        <button class='btn btn-sm play-media{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Watch streaming" %}">
+            <i class="glyphicon glyphicon-play"></i>
+        </button>
+    {% else %}  {# Case of Content Vendor #}
+        <button class='btn btn-sm order-media{% if user.is_anonymous %} connect{% elif user.customer.get_has_pending_update %} processing{% else %} confirm{% endif %}' title="{% trans "Order" %}">
+            <i class="glyphicon glyphicon-shopping-cart"></i>
+        </button>
+        <button class="btn btn-sm play-trailer" title="{% trans "Watch trailer" %}">
+            <i class="glyphicon glyphicon-play"></i>
+        </button>
+        <span class="load text-muted"></span>
+    {% endif %}
+</div>

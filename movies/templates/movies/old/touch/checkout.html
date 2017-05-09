@@ -1,0 +1,167 @@
+{% extends "touch_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page_title %} <title> Cinemax Club | Récapitulatif </title> {% endblock %}
+{% block custom_head %}
+    <style type="text/css">
+        #content {padding-bottom: 30px}
+        #content .title {font-size: 16px}
+        section {border-bottom: 1px solid #FCE5DD; float: left; margin-top: 15px; padding-bottom: 10px; width: 100%}
+        #cart {float: left; margin-top: 5px}
+        #cart .panel {border: none; padding: 0; position: static; width: 695px}
+        #cart .panel .movies {width: 695px}
+        #cart .panel .item:nth-child(5n) {margin-right: 3px} /* This cancels the rule defined in base.css */
+        #cart .panel .item:nth-child(8n) {margin-right: 0}
+        #cart .cancel-delete {margin: -30px 0 0 256px;}
+        #cart .panel .controls {height: 54px}
+        section > .cost {float: right; font-size: 16px}
+    #popupDialog a.button {float: right; margin-right: 1.2em}
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="wrapper">
+        <div id="content">
+            <div class="main-title"> Récapitulatif </div>
+
+            <section id="selection">
+                <div class="stage" style="float: left">
+                    <div class="title">Votre sélection</div>
+                </div>
+            </section>
+            <section id="about-pos">
+                <span class="title">
+                    <span>Où retirer ma commande ?</span>
+                    <p class="notice" style="font-style: italic; line-height: 15px; padding-top: 9px">
+                        Cette commande contient des films en dehors des catégories <strong>Top 20, Récents, Réligieux et Documentaires</strong>. <br/>
+                        Vous pourrez la récupérer seulement dans certains points. Retrouvez ces points après avoir confirmé.
+                    </p>
+                </span>
+                <div class="clear"></div>
+            </section>
+            <section id="summary" style="border-bottom: none; margin-top: 24px">
+                <div class="cost" style="color: #55372D">
+                    <span> TOTAL:&nbsp;</span>
+                    <span class="value"> 0 </span>
+                    <span class="currency"> Fr </span>
+                </div>
+                <div class="button default confirm" style="clear: both; float: right; margin-top: 15px; padding: 10px 15px 5px">
+                    <span class="icon" style="background-position: -234px -44px; margin: -6px 5px 0 0"></span>
+                    <span>
+                        <a href="#popupDialog" data-rel="popup" data-position-to="window" data-transition="flow" style="color: #300c00; text-decoration: none">
+                            Confirmer cette commande
+                        </a>
+                    </span>
+                </div>
+                <div class="notice" style="color: #BB7A66; clear: both; float: right; line-height: 14px; width: 225px">
+                    En confirmant, vous vous engagez à payer à la livraison.
+                </div>
+            </section>
+            <div class="clear"></div>
+        </div>
+    </div>
+
+    <div data-role="popup" id="popupDialog" data-dismissible="false" style="max-width:400px;">
+        <div data-role="header" data-theme="a">
+        <h1 style="color: #EEE; font-size: 1.5em; font-weight: normal">Confirmation</h1>
+        </div>
+        <div role="main" class="dialog confirm ui-content">
+            <div class="stage" style="height: 80px; padding: 10px 10px 6px">
+                <div style="font-size: 16px">
+                    Confirmez-vous cette commande ?
+                </div>
+                <div class="notice" style="clear: both; float: left; margin:  10px 0">
+                    En confirmant, vous vous engagez à payer à la livraison.
+                </div>
+                <div class='controls' style="border-top: solid 1px #FCE5DD; clear: both; margin-top: 15px; padding-top: 5px">
+
+                    <a href="#" class="button cancel" data-rel="back">Annuler</a>
+                    <a href="#" class="button default submit" data-rel="back" data-transition="flow">confirmer</a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block custom_js %}
+        <script type="text/javascript">
+        (function() {
+            var MAX_DELIVERY_PER_MONTH = 4, latestPrepayment;
+            {% if latest_prepayment %}
+                latestPrepayment = {
+                    daysLeft: {{ latest_prepayment.days_left }},
+                    countOrders: {{ count_orders_since_latest_prepayment }}
+                }
+            {% endif %}
+
+            function calculateOrderAmount() {
+                var total = 0;
+                //Movies cost
+                $cart.find('.item:not(.tpl)').each(function() {
+                    total += parseInt($(this).find('.cost .value').text())
+                })
+                var containsExtra = $cart.find('.item[extra=true]').length > 0;
+                $('.top-notice-ctnr').hide()
+                if (latestPrepayment) {
+                    if (latestPrepayment.daysLeft >= 0 && latestPrepayment.countOrders < MAX_DELIVERY_PER_MONTH) {
+                        total = 0;
+                        $('section#copy .cost').find('.value').text(0)
+                        $('section#delivery .cost .value').text(0)
+                        $('section#summary .cost .value').text(0)
+                    } else {
+                        if (latestPrepayment.daysLeft < 0)
+                            $('.top-notice-ctnr span').html("Abonnement expiré et vous êtes facturé normalement")
+                        else if (latestPrepayment.countOrders >= 4)
+                            $('.top-notice-ctnr span').html("Les 4 commandes sont épuisées")
+                        $('.top-notice-ctnr').hide().fadeIn()
+                    }
+                }
+                $('section#selection > .cost .value').text(total.formatMoney())
+                //Delivery fees
+                if (containsExtra) $('#about-pos').show()
+                else $('#about-pos').hide()
+                $('section#summary .cost .value').text(total.formatMoney())
+            }
+            //Copy and Paste cart content to the #selection element !!!
+            var $cart = $('#cart')
+            $cart.find('.panel').removeClass('has-shade')
+            cvb.populateCartPanel()
+            $cart.find('.delivery, .empty, .items-count, .controls .cost, .panel .close').remove()
+            $cart.appendTo('#selection .stage').find('.panel').fadeIn()
+
+            $('section#summary .confirm').click(function() {
+                if ($(this).hasClass('default')) {
+                    $('div#lightbox .dialog').hide()
+                    $('div#lightbox .dialog.confirm').show()
+                    $('#lightbox').fadeIn()
+                    $(window).css('cursor', 'wait')
+                } else return
+            })
+            $('div#popupDialog a.button.submit').click(function() {
+                if ($(this).hasClass('disabled')) return;
+                var endPoint = "{% url 'confirm_order' %}"
+                var items = cvb.listMovieForSave()
+                cvb.submitOrderInfo(endPoint, items, function(order) {
+                    $('.top-notice-ctnr span').removeClass('failure').html("Votre commande a été enregistrée")
+                    $('.top-notice-ctnr').fadeIn('slow')
+                    $('.dialog.point-of-sales input').attr('orderId', order.id)
+                })
+                $('#lightbox').fadeOut()
+            })
+            calculateOrderAmount()
+            $('.item .delete, div#cart .cancel-delete').live('click', calculateOrderAmount)
+
+            $(window).scroll(function() {
+                var bnrH = $('#cart .panel .movies').height(),
+                    scrollTop = $(this).scrollTop(),
+                    $orderButton = $('section#summary').clone()
+                $('section#summary').remove()
+                if (scrollTop > bnrH ) {
+                    $orderButton.insertAfter('section#selection')
+                }else if (scrollTop < bnrH ){
+                    $orderButton.insertAfter('div.main-title')
+                }
+
+            })
+        })()
+    </script>
+{% endblock %}

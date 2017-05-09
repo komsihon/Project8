@@ -1,0 +1,36 @@
+- model: movies.category
+  pk: 56eb6d04b37b3379b531e091
+  fields:
+    title: HD
+    slug: hd
+    order_of_appearance: 1
+
+- model: movies.category
+  pk: 56eb6d04b37b3379b531e092
+  fields:
+    title: Western
+    slug: western
+    previews_length: 5
+    order_of_appearance: 2
+
+- model: movies.category
+  pk: 56eb6d04b37b3379b531e093
+  fields:
+    title: Adult
+    slug: adult
+    is_adult: Yes
+    order_of_appearance: 3
+
+- model: movies.category
+  pk: 56eb6d04b37b3379b531e094
+  fields:
+    title: Top 100
+    slug: top
+    order_of_appearance: 4
+
+- model: movies.category
+  pk: 56eb6d04b37b3379b531e095
+  fields:
+    title: Series
+    slug: series
+    order_of_appearance: 5

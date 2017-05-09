@@ -1,0 +1,72 @@
+<script type="text/javascript">
+    (function() {
+        /**********************************************************************/
+        /**************************   VOD HANDLERS    *************************/
+        /**********************************************************************/
+        $('.media .actions .play:not(.connect), .media .actions .trailer').live('click', function() {
+            var type = $(this).data('type'),
+                id = $(this).data('id'),
+                itemUrl = '{% url 'movies:stream' 'type' 'id' %}'.replace('/type/id', '') + type + '/' + id,
+                size = $(this).data('size'),
+                $dialogPlayer = $('div#lightbox .dialog.player');
+            if (!type) return true; // No type will generally mean "series", thus his cause the action to take to detail page of the series
+            $('div#lightbox .dialog').hide();
+            $('div#lightbox .dialog.player video, div#lightbox .dialog.player .streaming-error').hide();
+            $dialogPlayer.addClass('spinner');
+            $dialogPlayer.show();
+            $('#lightbox').addClass('stream').fadeIn();
+            $.getJSON(itemUrl, {is_check: 'yes'}, function(data) {
+                $dialogPlayer.removeClass('spinner');
+                if (data.error) {
+                    showStreamError(data);
+                } else {
+                    $dialogPlayer.addClass('stream');
+                    $('div#lightbox .dialog.player .streaming-error').hide();
+                    if (data.html) {
+                        var $iframe = $(data.html),
+                            width = $iframe.attr('width'),
+                            height = $iframe.attr('height'),
+                            dialogWidth = $dialogPlayer.width(),
+                            dialogHeight = $dialogPlayer.height();
+                        if (dialogWidth <= width)
+                            $dialogPlayer.width(dialogWidth + 72);
+                        if (dialogHeight <= height)
+                            $dialogPlayer.height(dialogHeight + 48);
+                        else
+                            $iframe.css('margin-top', (dialogHeight - height) / 2 + 'px');
+                        $iframe.insertBefore('div#lightbox .dialog.player video');
+                        return
+                    }
+                    var domData = {type: type, id: id, size: size};
+                    if (type != 'trailer')
+                        $('div#lightbox .dialog.player video').removeClass('trailer').data(domData).attr('src', itemUrl).show();
+                    else
+                        $('div#lightbox .dialog.player video').addClass('trailer').data(domData).attr('src', itemUrl).show();
+                }
+            });
+            return false
+        });
+        $('div#lightbox .dialog.player video').bind('contextmenu',function() { return false });
+        $('div#lightbox.stream').live('click', function() {
+            $('div#lightbox').removeClass('stream').fadeOut();
+            document.getElementsByTagName('video')[0].pause();
+        });
+        $('div#lightbox .dialog.player.stream').live('click', function(e) {
+            e.stopPropagation();
+        });
+
+        $('div#lightbox .dialog.player .suggest-payment .pay-single .action').live('click', function(e) {
+            $('div#lightbox .dialog.player .suggest-payment').animate({marginTop: '12px'});
+            $('div#lightbox .dialog.player .suggest-payment .pay-single .means').fadeIn();
+            e.stopPropagation();
+        });
+        function showStreamError(data) {
+            $('div#lightbox .dialog.player video').hide();
+            $('div#lightbox .dialog.player').removeClass('stream');
+            if (data.html) {
+                $('div#lightbox .dialog.player .streaming-error').html(data.html).show().find('p.error').html(data.error);
+            } else
+                $('div#lightbox .dialog.player .streaming-error').show().find('p').html(data.error);
+        }
+    })()
+</script>

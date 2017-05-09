@@ -1,0 +1,47 @@
+{% load i18n static %}
+<div class="modal fade" id="payment-methods" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content modal-info">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{% trans "Pay now" %}</h4>
+            </div>
+            <div class="modal-body">
+                <form id="checkout" method="post">{% csrf_token %}
+                    <input type="hidden" id="bundle-id" name="bundle_id" />
+                    <input type="hidden" id="media-id" name="media_id" />
+                    <input type="hidden" id="media-type" name="media_type" />
+                    <ul class="row">
+                        <li class="col-sm-4 payment-method{% if not config.is_pro_version and not config.allow_cash_payment %} col-sm-offset-2{% endif %}"
+                            data-action-url="{{ momo_action_url }}">
+                            <a style="background: #ffca06" title="{% trans "Pay with MTN Mobile Money" %}">
+                                <img src="{% static 'shavida/img/logo_mtn_mobile_money.jpg' %}" height="90"/>
+                            </a>
+                        </li>
+                        <li class="col-sm-4 payment-method om" data-action-url="{{ momo_action_url }}">
+                            <a style="background: #15171e" title="{% trans "Pay with Orange Money" %}">
+                                <img src="{% static 'shavida/img/logo-OM-200x166.png' %}" height="90"/>
+                            </a>
+                        </li>
+                        {% if config.allow_cash_payment %}
+                            <input type="hidden" name="pay_cash" value="yes"/>
+                            <li class="col-sm-4 payment-method cash" data-action-url="{% url 'sales:choose_vod_bundle' %}">
+                                <a href="#" style="border: 1px solid #eee" title="{% trans "Pay cash on a POS" %}">
+                                    <img src="{% static 'shavida/img/Icon_cash2-300x268.jpg' %}" height="90" style="width: 100%"/>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if config.is_pro_version %}
+                            <li class="col-sm-4 payment-method" data-action-url="{{ paypal_action_url }}">
+                                <a href="#" style="border: 1px solid #eee">
+                                    <img src="{% static 'shavida/img/payment-logo.jpg' %}" height="90" style="width: 100%"/>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </form>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>

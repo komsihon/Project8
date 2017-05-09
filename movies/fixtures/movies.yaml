@@ -1,0 +1,312 @@
+- model: movies.trailer
+  pk: 56eb6d04b37b3379b531e088
+  fields:
+    title: Tailer western movie
+    slug: trailer-western-movie
+    resource: western-movie.trlr.mp4
+    resource_mob: western-movie.trlr.mp4
+    size: 63
+    duration: 2
+
+- model: movies.trailer
+  pk: 56eb6d04b37b3379b531e089
+  fields:
+    title: Tailer Daredevil
+    slug: trailer-daredevil-series
+    resource: daredevil-season1.trlr.mp4
+    resource_mob: daredevil-season1.trlr.mp4
+    size: 37
+    duration: 2
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e081
+  fields:
+    title: HD Movie
+    slug: hd-movie
+    poster: movies/hd-movie.jpg
+    synopsis: ''
+    resource: hd-movie.mp4
+    resource_mob: hd-movie.mp4
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: ''
+    categories:
+      - id: 56eb6d04b37b3379b531e091
+        slug: hd
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e082
+  fields:
+    title: Western movie
+    slug: western-movie
+    poster: movies/western-movie.jpg
+    synopsis: ''
+    resource: western-movie.mp4
+    resource_mob: western-movie.mp4
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    trailer_slug: trailer-western-movie
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: ''
+    categories:
+      - id: 56eb6d04b37b3379b531e092
+        slug: western
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e083
+  fields:
+    title: Adult movie
+    slug: adult-movie
+    poster: movies/adult-movie.jpg
+    synopsis: ''
+    resource: adult-movie.mp4
+    resource_mob: adult-movie.mp4
+    is_adult: Yes
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: ''
+    categories:
+      - id: 56eb6d04b37b3379b531e093
+        slug: adult
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e084
+  fields:
+    title: Top movie
+    slug: top
+    poster: movies/top-movie.jpg
+    synopsis: ''
+    resource: top-movie.part1.mp4, top-movie.part2.mp4
+    resource_mob: top-movie.part1.mp4, top-movie.part2.mp4
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: ''
+    categories:
+      - id: 56eb6d04b37b3379b531e092
+        slug: western
+      - id: 56eb6d04b37b3379b531e094
+        slug: top
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e085
+  fields:
+    title: Seven magnificent
+    slug: seven-magnificent
+    poster: movies/seven-magnificent.jpg
+    synopsis: ''
+    resource: seven-magnificent.mp4
+    resource_mob: seven-magnificent.mp4
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: ''
+    categories:
+      - id: 56eb6d04b37b3379b531e092
+        slug: western
+
+- model: movies.movie
+  pk: 56eb6d04b37b3379b531e086
+  fields:
+    title: The Good, the Bad and the Ugly
+    slug: good-bad-ugly
+    poster: movies/good-bad-ugly.jpg
+    synopsis: ''
+    resource: good-bad-ugly.mp4
+    resource_mob: good-bad-ugly.mp4
+    provider: 56eb6d04b37b3379b531e011
+    view_price: 300
+    fake_orders: 0
+    fake_clicks: 630
+    price: 300
+    duration: 90
+    size: 150
+    tags: good bad ugly
+    categories:
+      - id: 56eb6d04b37b3379b531e092
+        slug: western
+
+- model: movies.series
+  pk: 56eb6d04b37b3379b531e071
+  fields:
+    title: Daredevil
+    season: 1
+    slug: daredevil-season1
+    poster: series/daredevil-saison1.jpg
+    synopsis: ''
+    episodes_count: 12
+    price: 1200
+    view_price: 1200
+    is_adult: Yes
+    provider: 56eb6d04b37b3379b531e011
+    trailer_slug: trailer-daredevil-series
+    tags: daredevil
+    categories:
+      - id: 56eb6d04b37b3379b531e095
+        slug: series
+
+- model: movies.series
+  pk: 56eb6d04b37b3379b531e072
+  fields:
+    title: Scandal
+    season: 1
+    slug: scandal-season1
+    poster: series/scandal-season1.jpg
+    synopsis: ''
+    episodes_count: 12
+    price: 1200
+    view_price: 1200
+    provider: 56eb6d04b37b3379b531e011
+    groups: scandal
+    tags: scandal olivia pope
+    categories:
+      - id: 56eb6d04b37b3379b531e095
+        slug: series
+
+- model: movies.series
+  pk: 56eb6d04b37b3379b531e073
+  fields:
+    title: Scandal
+    season: 2
+    slug: scandal-season2
+    poster: series/scandal-season1.jpg
+    synopsis: ''
+    episodes_count: 12
+    price: 1200
+    view_price: 1200
+    provider: 56eb6d04b37b3379b531e011
+    groups: scandal
+    tags: scandal olivia pope
+    categories:
+      - id: 56eb6d04b37b3379b531e095
+        slug: series
+
+- model: movies.series
+  pk: 56eb6d04b37b3379b531e074
+  fields:
+    title: Scandal
+    season: 3
+    slug: scandal-season3
+    poster: series/scandal-season3.jpg
+    synopsis: ''
+    episodes_count: 12
+    price: 1200
+    view_price: 1200
+    provider: 56eb6d04b37b3379b531e011
+    groups: scandal
+    tags: scandal olivia pope
+    categories:
+      - id: 56eb6d04b37b3379b531e095
+        slug: series
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e061
+  fields:
+    series: 56eb6d04b37b3379b531e071
+    title: Daredevil s01e01
+    slug: daredevil-s01e01
+    resource: Daredevil.saison1/Daredevil-s01e01.mp4
+    resource_mob: Daredevil.saison1/Daredevil-s01e01.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e062
+  fields:
+    series: 56eb6d04b37b3379b531e071
+    title: Daredevil s01e02
+    slug: daredevil-s01e02
+    resource: Daredevil.saison1/Daredevil-s01e02.mp4
+    resource_mob: Daredevil.saison1/Daredevil-s01e02.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e063
+  fields:
+    series: 56eb6d04b37b3379b531e071
+    title: Daredevil s01e03
+    slug: daredevil-s01e03
+    resource: Daredevil.saison1/Daredevil-s01e03.mp4
+    resource_mob: Daredevil.saison1/Daredevil-s01e03.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e064
+  fields:
+    series: 56eb6d04b37b3379b531e071
+    title: Daredevil s01e04
+    slug: daredevil-s01e04
+    resource: Daredevil.saison1/Daredevil-s01e04.mp4
+    resource_mob: Daredevil.saison1/Daredevil-s01e04.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e065
+  fields:
+    series: 56eb6d04b37b3379b531e073
+    title: Scandal s02e01
+    slug: scandal-s02e01
+    resource: Scandal.season2/Scandal-s02e01.mp4
+    resource_mob: Scandal.season2/Scandal-s02e01.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341
+
+- model: movies.seriesepisode
+  pk: 56eb6d04b37b3379b531e066
+  fields:
+    series: 56eb6d04b37b3379b531e073
+    title: Scandal s02e02
+    slug: scandal-s02e02
+    resource: Scandal.season2/Scandal-s02e02.mp4
+    resource_mob: Scandal.season2/Scandal-s02e02.mp4
+    fake_orders: 421
+    orders: 102
+    fake_clicks: 630
+    clicks: 630
+    duration: 40
+    size: 341

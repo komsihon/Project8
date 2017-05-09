@@ -1,0 +1,151 @@
+<script type="text/javascript">
+    (function() {
+        /**********************************************************************/
+        /************************   GLOBAL HANDLERS    ************************/
+        /**********************************************************************/
+        {% if request.user.is_authenticated %}
+            cvb.userInitialCapacity = "{{ available_storage }}";
+            {% if count_orders_since_latest_prepayment >= 4 or latest_prepayment_days_left <= 0 %} // means the user should pay for the current order even if he is a prepaid user
+                $("div#cart .actions .cost").show();
+            {% else %}
+                $("div#cart .actions .cost").hide();
+            {% endif %}
+        {% endif %}
+
+        var itemCount = localStorage.getItem('itemsCount');
+        if (!itemCount) itemCount = 0;
+        $('div a.items-count span').text(itemCount);
+
+        $('form#search').submit(function() {
+            var q = cvb.stripArticles($(this).find('[name=radix]').val());
+            $(this).find('[name=q]').val(q)
+        });
+        $('form#search input').focusin(function() {
+           $('form#search .icon.magnifier').hide();
+           $(this).animate({width: 270}, 'normal', 'swing');
+           $('#search-result').removeClass('hidden')
+        }).blur(function() {
+            $(this).animate({width: 216}, 'normal', 'swing', function() {$('form#search .icon.magnifier').show()});
+            $(this).val("");
+            $('#search-results').fadeOut()
+        }).keyup(function() {
+            var str = $(this).val();
+            str = cvb.stripArticles(str);
+            cvb.search("{% url 'search' %}" , str, '#search-results', 'div#search-results .movie', 'form#search .spinner')
+        });
+        $('div#top .login').click(function(){
+            $('#login-panel').slideDown()
+        });
+        $('div#login-panel .close').click(function(){
+            $('#login-panel').slideUp()
+        });
+        $('#user-menu').click(function(){
+            $('div#user-menu .panel').slideDown()
+        });
+        $('div#user-menu .panel').mouseleave(function(){
+            $('div#user-menu .panel').slideUp()
+        });
+        $('div#user-menu .logout').click(function() {
+            localStorage.removeItem('movieSelection');
+            localStorage.removeItem('seriesSelection');
+            localStorage.removeItem('itemsCount')
+        });
+
+        $('.button.processing').live('click', function() {
+            $('.top-notice-ctnr span').html('Désolé! Une commande en cours non livrée');
+            $('.top-notice-ctnr').hide().fadeIn();
+            return false
+        });
+     // ask the user to connect if he is not when triying to order movies
+        $('button.connect, .button.connect').live('click', function() {
+            $('.top-notice-ctnr span').html('Désolé! Connectez vous avant');
+            $('.top-notice-ctnr').hide().fadeIn().delay(5000).fadeOut();
+            return false
+        });
+        /********************************************************************/
+        /***********************    CART HANDLERS    ************************/
+        /********************************************************************/
+        $('div#cart .empty').click(function() {
+            if (confirm("Voulez-vous vraiment vider le panier ?")) {
+                localStorage.setItem('itemsCount', 0);
+                localStorage.setItem('movieSelection', '[]');
+                localStorage.setItem('seriesSelection', '[]');
+                cvb.populateCartPanel()
+            } else return false
+        });
+        $('.order.default').live('click', function() {
+            var size = $(this).attr('size');
+            if (cvb.hasEnoughBalance(size)) {
+                $('.top-notice-ctnr span').html("Désolé! Vous ne disposez plus assez de capacité pour ce fichier.").addClass('failure');
+                $('.top-notice-ctnr').hide().fadeIn().delay(5000).fadeOut();
+                cvb.warnedAboutStorage = true;
+                return false
+            }
+            if ($(this).attr('adult').toLowerCase() == 'true' && cvb.canOrderAdult == 'false') {
+                $('.top-notice-ctnr span').html("Seul un forfait de <b> 2500F </b> ou plus permet de commander des films adultes");
+                $('.top-notice-ctnr').hide().fadeIn().delay(6000).fadeOut();
+                return false
+            }
+            if ($(this).attr('extra').toLowerCase() == 'true') {
+                if ($('div#cart .item[extra=true]').length == 0) { // Don't show the notice below if there's already an extra in cart
+                    $('.top-notice-ctnr span').html("Ce film ne figure pas dans les catégories standards, <b>vous pourrez les récupérer seulement dans certains points spécifiques</b>");
+                    $('.top-notice-ctnr').hide().fadeIn().delay(6000).fadeOut()
+                }
+            }
+            var item = {
+                type: $(this).attr('type'),
+                id: $(this).attr('movieId'),
+                cost: $(this).attr('cost'),
+                size: size,
+                title: $(this).attr('title'),
+                extra: $(this).attr('extra').toLowerCase(),
+                bgImg: $(this).attr('bgImg')
+            };
+            if ($('div#cart .item:not(.tpl)').length == 0) $('div#cart .panel').slideDown();
+            cvb.addToCart(item);
+            cvb.populateCartPanel()
+        });
+
+        $('div#banner .button.order').click(function() {
+            var movieId = $(this).attr('movieid');
+            $('#content').find(".button.order[movieid='" + movieId + "']").removeClass('default').addClass('disabled')
+        });
+
+        $('div#cart .items-count').click(function() {
+            $('div#cart .panel').slideDown();
+        });
+        $('div#cart .panel .close').click(function() {
+            $('div#cart .panel').slideUp()
+        });
+        $('div#cart .panel .item').live('mouseenter', function() {
+            $(this).find('.delete-bg, .delete').show();
+        }).live('mouseleave', function() {
+            $(this).find('.delete-bg, .delete').hide();
+        });
+        $('div#cart .item .delete').live('click', function() {
+            var index = $(this).parents('.item').index(),
+                type = $(this).parents('.item').attr('type');
+            cvb.removeFromCart(index, type);
+            $("div#cart .cancel-delete").fadeIn().delay(6000).fadeOut();
+            cvb.populateCartPanel()
+        });
+        $('div#lightbox .login').click(function() {
+            $('#login-panel').slideDown();
+            $('#login-panel form input:first').focus();
+            $('#lightbox').fadeOut();
+            return false
+        });
+        $('div#cart .cancel-delete .action').click(function() {
+            cvb.addToCart(cvb.latestDeletedElt.item, cvb.latestDeletedElt.index);
+            cvb.populateCartPanel();
+            $("div#cart .cancel-delete").fadeOut()
+        });
+     // ask the user to connect if he is not when triying to order movies
+        $('.button.connect').live('click', function() {
+            $('#lightbox').fadeIn().removeClass('hidden');
+            return false
+        });
+        $(window).bind('storage', cvb.populateCartPanel);
+        cvb.populateCartPanel()
+    })()
+</script>

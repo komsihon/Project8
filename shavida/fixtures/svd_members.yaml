@@ -1,0 +1,49 @@
+- model: accesscontrol.member
+  pk: 56eb6d04b37b3379b531e011
+  fields:
+    username: member1
+    email: member1@ikwen.com
+    password: pbkdf2_sha256$12000$nNK3SeCKYSvl$CuoviZNeie9YzaWhukVCi9iQtNmpu3QBbK2yHGHEUxc=  # admin
+    phone: 677000001
+
+- model: shavida.customer
+  fields:
+    member: 56eb6d04b37b3379b531e011
+
+- model: accesscontrol.member
+  pk: 56eb6d04b37b3379b531e012
+  fields:
+    username: member2
+    email: member2@ikwen.com
+    password: pbkdf2_sha256$12000$nNK3SeCKYSvl$CuoviZNeie9YzaWhukVCi9iQtNmpu3QBbK2yHGHEUxc=  # admin
+    phone: 677000002
+
+- model: shavida.customer
+  fields:
+    member: 56eb6d04b37b3379b531e012
+    is_vod_operator: Yes
+
+- model: accesscontrol.member
+  pk: 56eb6d04b37b3379b531e013
+  fields:
+    username: member3
+    email: member3@ikwen.com
+    password: pbkdf2_sha256$12000$nNK3SeCKYSvl$CuoviZNeie9YzaWhukVCi9iQtNmpu3QBbK2yHGHEUxc=  # admin
+    phone: 677000003
+
+- model: shavida.customer
+  fields:
+    member: 56eb6d04b37b3379b531e013
+
+- model: accesscontrol.member
+  pk: 56eb6d04b37b3379b531e014
+  fields:
+    username: member4
+    email: member4@ikwen.com
+    password: pbkdf2_sha256$12000$nNK3SeCKYSvl$CuoviZNeie9YzaWhukVCi9iQtNmpu3QBbK2yHGHEUxc=  # admin
+    phone: 677000004
+
+- model: shavida.customer
+  fields:
+    member: 56eb6d04b37b3379b531e014
+    adult_authorized: Yes

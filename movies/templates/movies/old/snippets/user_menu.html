@@ -1,0 +1,15 @@
+{% load i18n %}
+<div id="user-menu" class="icon-menu">
+    <div class="icon" style="background-position: -194px -48px; margin-top: 3px"></div>
+    <nav class="panel hidden">
+        <ul class="has-shade">
+            <div class="icon box-arrow"></div>
+            <div> <span style="color: #444; font-size: 15px; font-weight: bold; padding: 5px"> {{ request.user.first_name }} </span> </div>
+            <li><a href="{% url 'movies:home' %}"> {% trans "Library" %} </a> </li>
+            {# TODO: Implement user history on VOD sites. #}
+{#            <li><a href="{% url 'me:history' %}"> {% trans "History" %} </a> </li>#}
+            <li><a href="{% url 'ikwen:account_setup' %}"> {% trans "Account info" %} </a></li>
+            <li><a href="{% url 'ikwen:logout' %}?next_url={% url 'movies:home' %}" class="logout"> {% trans "Logout" %} </a> </li>
+        </ul>
+    </nav>
+</div>

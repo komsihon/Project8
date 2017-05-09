@@ -1,0 +1,13 @@
+{% load i18n staticfiles %}
+<div class="dialog bundle-sold-out has-shade hidden">
+    <div class="streaming-error">
+        <img src="{% static 'shavida/img/embarassed-smiley.jpg' %}"/>
+        <p class="error">{% trans "You don't have any bundle. Please buy one to stream." %}</p>
+        <div class="suggest-payment">
+            <div>
+                <a class="action" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
+                <p class="notice">{% trans "Stream without limitation." %}</p>
+            </div>
+        </div>
+    </div>
+</div>

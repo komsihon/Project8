@@ -1,0 +1,22 @@
+{% load i18n static %}
+{% if settings.IS_VOD_OPERATOR %}
+    <div class="actions">
+        {% if not user.is_authenticated %}
+            <button class='btn btn-sm play-media connect' title="{% trans "Watch streaming" %}">
+                <i class="glyphicon glyphicon-play"></i>
+            </button>
+        {% else %}
+            <button id="{{ episode.id }}" class='btn btn-sm play-media' title="{% trans "Watch streaming" %}"
+                    data-type="series" data-id="{{ episode.id }}">
+                <i class="glyphicon glyphicon-play"></i>
+            </button>
+        {% endif %}
+    </div>
+{% else %}  {# Case of Content Vendor #}
+    <button class="btn btn-sm order-media order {{ episode.id }}{% if user.is_anonymous %} connect{% elif user.has_pending_update %} processing{% endif %} confirm"
+            style="margin-top: 0" title="{% trans "Order for your VOD store." %}"
+            data-id='{{ episode.id }}' data-title="{{episode.title}}" data-load='{{ episode.load }}'
+            data-type='series' data-is_adult="{{ episode.is_adult }}" data-poster="{% get_media_prefix %}{{ media.poster.small_name }}">
+        <i class="glyphicon glyphicon-shopping-cart"></i>
+    </button>
+{% endif %}

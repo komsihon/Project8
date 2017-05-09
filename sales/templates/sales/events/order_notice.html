@@ -1,0 +1,78 @@
+{% load i18n staticfiles humanize auth_tokens %}
+<div style="padding: 0 15px">
+    <div>
+        <h4 class="text-primary">
+            {{ title }}
+            {% if not IS_GAME_VENDOR %}<span class="text-muted" style="font-size: .8em">({{ size }})</span>{% endif %}
+            <a href="{{ service.url }}{% url 'sales:order_detail' order.id %}" style="float: right; font-size: .8em">{% trans "Details" %}</a>
+        </h4>
+        <ul style="margin: 0; max-height: 270px; padding: 0; overflow: auto">
+            {% for media in media_list|slice:":15" %}
+                <li class="ik-li" style="padding: 10px 0">
+                    <span class="image" style="background-image: url({{ MEDIA_URL }}{{ media.poster.small_name }});height: 45px;width: 45px"></span>
+                    <div style="float: left; margin-left: 5px; overflow:hidden; width: 80%">
+                        <strong class="title" style="font-size: 15px; margin-top: 5px; width: 200%">{{ media.title }}</strong>
+                        <p class="text-muted">{{ media.resource }}</p>
+                    </div>
+                </li>
+            {% endfor %}
+            {% if more %}
+            <li class="ik-li">
+                <a href="{{ service.url }}{% url 'sales:order_detail' order.id %}" class="text-muted" style="border: 1px solid #ddd; border-radius: 3px; display: block; line-height: 36px; text-align: center">
+                    {% blocktrans %}+ {{ more }} more <strong>(See all){% endblocktrans %}</strong>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% if member %}
+        <div class="card-signature">
+            <div class="photo">
+                {% url 'ikwen:profile' member.id as member_url %}
+                <a href="{{ member_url|ikwenize }}">
+                    {% if member.photo.name %}
+                        <img src="{{ IKWEN_MEDIA_URL }}{{ member.photo.thumb_name }}" alt="{{ member.full_name }}" class="img-responsive" />
+                    {% else %}
+                        <img src="{% static MEMBER_AVATAR %}" alt="{{ member.full_name }}" class="img-responsive" />
+                    {% endif %}
+                </a>
+            </div>
+            <div class="member-info">
+                <p class="member-name">
+                    {% url 'ikwen:profile' member.id as member_url %}
+                    <a href="{{ member_url|ikwenize }}">{{ member.full_name }}</a>
+                </p>
+            </div>
+        </div>
+        {% if show_button %}
+            <div class="col-xs-8 col-sm-6 col-xs-offset-2 col-sm-offset-3" style="clear: both; margin-top: 1em">
+                <button class="btn btn-sm btn-block btn-warning confirm" data-order-id="{{ event.object_id }}">{% trans "Confirm" %}</button>
+            </div>
+        {% endif %}
+    {% else %}
+        {% if show_button %}
+            <div class="col-xs-8 col-sm-6 col-xs-offset-2 col-sm-offset-3" style="margin-top: 1em">
+                <button class="btn btn-sm btn-block btn-warning cancel" data-order-id="{{ event.object_id }}">{% trans "Cancel" %}</button>
+            </div>
+        {% endif %}
+    {% endif %}
+    <script>
+        (function() {
+            $('#{{ event.id }}').on('click', 'button.cancel', function () {
+                $.getJSON("{{ service.url }}{% url 'sales:cancel_order' %}?callback=?", {member_id: '{{ user_id }}'}, function(resp) {
+                    $('#{{ event.id }}').css('overflow', 'hidden').animate({height: 0}, 'normal', 'linear', function() {
+                        $(this).remove();
+                        ikwen.showFloatingNotice("{% trans "Order canceled" %}", null, 3)
+                    })
+                })
+            }).on('click', 'button.confirm', function () {
+                $.getJSON("{{ service.url }}{% url 'sales:confirm_processed' %}?callback=?", {order_id: '{{ event.object_id }}'}, function(resp) {
+                    if (resp.success) {
+                        $('#{{ event.id }} button').hide();
+                        ikwen.showFloatingNotice("{% trans "Order confirmed" %}", null, 3)
+                    }
+                })
+            })
+        })()
+    </script>
+</div>
