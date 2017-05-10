@@ -201,7 +201,7 @@ IKWEN_LOGIN_EVENTS = (
 )
 
 IKWEN_CONFIG_MODEL = 'shavida.OperatorProfile'
-IKWEN_CONFIG_MODEL_ADMIN = 'ikwen_shavida.shavida.admin.ConfigAdmin'
+IKWEN_CONFIG_MODEL_ADMIN = 'ikwen_shavida.shavida.admin.OperatorProfileAdmin'
 
 IKWEN_BASE_URL = 'http://localhost/ikwen'  # Used only for dev purposes (DEBUG = False)
 WSGI_SCRIPT_ALIAS = '/shavida'  # Used only for dev purposes (DEBUG = False)
