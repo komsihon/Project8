@@ -352,10 +352,7 @@ class Search(CustomerView):
         #             {'$text': {'$search': stripped_terms}, 'visible': True}
         #         )[:limit_series]]
         #         items.extend(series)
-        if getattr(settings, 'DEBUG', False):
-            show_adult = self.request.user.is_authenticated() and self.request.user.customer.get_can_access_adult_content()
-        else:
-            show_adult = self.request.user.is_authenticated() and self.request.user.can_access_adult_content
+        show_adult = self.request.user.is_authenticated() and self.request.user.customer.get_can_access_adult_content()
         items = list(items)
         for item in items:
             if type(item).__name__ == "Movie" and item.is_adult:
