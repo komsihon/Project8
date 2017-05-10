@@ -16,7 +16,7 @@ from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
 from ikwen.billing.models import PaymentMean
 from ikwen.cashout.models import CashOutRequest
-from ikwen.conf.settings import MOMO_SLUG
+from ikwen.conf.settings import MOMO_SLUG, FALLBACK_SHARE_RATE
 from ikwen.core.models import Service, OperatorWallet
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
     add_event, calculate_watch_info, rank_watch_objects
@@ -217,6 +217,11 @@ def share_payment_and_set_stats(customer, amount):
     ikwen_earnings = amount * profile_umbrella.ikwen_share_rate / 100
     ikwen_earnings += profile_umbrella.ikwen_share_fixed
     operator_earnings = amount - ikwen_earnings
+    if ikwen_earnings > amount:
+        fallback_rate = max(profile_umbrella.ikwen_share_rate, FALLBACK_SHARE_RATE)
+        ikwen_earnings = amount * fallback_rate / 100
+        operator_earnings = amount - ikwen_earnings
+
     profile_umbrella.raise_balance(operator_earnings)
 
     partner = service_umbrella.retailer
