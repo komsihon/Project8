@@ -77,7 +77,7 @@ class Customer(AbstractWatchModel):
         return ContentUpdate.objects.filter(status=ContentUpdate.PENDING, member=self.member).count()
 
     def get_last_update(self):
-        from sales.models import ContentUpdate
+        from ikwen_shavida.sales.models import ContentUpdate
         updates = ContentUpdate.objects.filter(member=self.member).order_by('-id')
         return updates[0] if len(updates) > 0 else None
 
