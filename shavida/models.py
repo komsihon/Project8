@@ -123,6 +123,9 @@ class OperatorProfile(AbstractConfig):
     max_products = models.FloatField(default=0,
                                      help_text=_("Maximum number of media in the library."))
 
+    class Meta:
+        verbose_name = 'Operator'
+
     def save(self, *args, **kwargs):
         using = kwargs.get('using')
         if using:

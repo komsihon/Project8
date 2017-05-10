@@ -17,15 +17,17 @@ from tracking.models import BannedIP, UntrackedUserAgent
 
 if getattr(settings, 'IS_IKWEN', False):
     _fieldsets = [
+        (_('Company'), {'fields': ('company_name', 'short_description', 'slogan', 'description')}),
         (_('Business'), {'fields': ('ikwen_share_rate', 'ikwen_share_fixed', 'cash_out_min',)}),
         (_('Platform'), {'fields': ('is_pro_version',)}),
         (_('SMS'), {'fields': ('sms_api_script_url', 'sms_api_username', 'sms_api_password',)}),
         (_('Mailing'), {'fields': ('welcome_message', 'signature',)})
     ]
-    _readonly_fields = ('api_signature',)
+    _readonly_fields = ()
 else:
     service = get_service_instance()
     config = service.config
+    _readonly_fields = ('is_certified',)
     _fieldsets = [
         (_('Company'), {'fields': ('company_name', 'short_description', 'slogan', 'description',)}),
         (_('Website'), {'fields': ('currency_code', 'currency_symbol',)}),
@@ -38,6 +40,17 @@ else:
     if getattr(settings, 'IS_VOD_OPERATOR', False):
         _fieldsets.insert(2, (_('VOD'), {'fields': ('data_sources', 'movies_timeout', 'series_timeout',
                                                     'allow_unit_prepayment', 'allow_cash_payment')}))
+
+
+class OperatorProfileAdmin(admin.ModelAdmin):
+    list_display = ('service', 'company_name', 'ikwen_share_fixed', 'ikwen_share_rate', 'cash_out_min')
+    fieldsets = _fieldsets
+    readonly_fields = _readonly_fields
+    search_fields = ('company_name', 'contact_email', )
+    save_on_top = True
+
+    def delete_model(self, request, obj):
+        self.message_user(request, "You are not allowed to delete Configuration of the platform")
 
 
 class CustomerAdmin(ExportMixin, admin.ModelAdmin):
@@ -107,12 +120,6 @@ class CustomerAdmin(ExportMixin, admin.ModelAdmin):
         return queryset, use_distinct
 
 
-class ConfigAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'slogan', 'contact_email', 'contact_phone')
-    fieldsets = _fieldsets
-    save_on_top = True
-
-
 # Unregister ikwen billing models
 if not getattr(settings, 'IS_UMBRELLA', False):
     try:
@@ -138,7 +145,7 @@ except NotRegistered:
     pass
 
 if getattr(settings, 'IS_IKWEN', False):
-    admin.site.register(OperatorProfile, ConfigAdmin)
+    admin.site.register(OperatorProfile, OperatorProfileAdmin)
 else:
     try:
         admin.site.unregister(Product)
