@@ -305,13 +305,15 @@ _base_fields = ('title', 'slug', 'release', 'synopsis', 'size', 'duration', 'pos
 if getattr(settings, 'IS_GAME_VENDOR', False):
     _list_display = ('title', 'price', 'orders', 'visible')
     _base_fields = ('title', 'slug', 'release', 'synopsis', 'poster')
-    _meta = ('visible', 'trailer_resource', 'groups', 'tags')
+    _meta = ('visible', 'price', 'trailer_resource', 'groups', 'tags')
 elif getattr(settings, 'IS_VOD_OPERATOR', False):
     _list_display = ('title', 'size', 'duration', 'view_price', 'clicks', 'resource', 'visible')
     _meta = ('visible', 'is_adult', 'resource', 'resource_mob', 'view_price', 'trailer_resource', 'groups', 'tags', )
 else:
     _list_display = ('title', 'size', 'duration', 'price', 'orders', 'resource', 'visible')
     _meta = ('visible', 'is_adult', 'resource', 'price', 'trailer_resource', 'groups', 'tags', )
+
+
 class MovieAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = MovieResource
     list_display = _list_display
