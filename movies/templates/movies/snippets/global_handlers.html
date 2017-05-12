@@ -42,6 +42,7 @@
             var signInUrl = '{% url 'ikwen:sign_in' %}';
             window.location = signInUrl;
         }).on('click', '.order-media.processing', function() {
+            {% url "ikwen:console" as history_url %}
             var notice = "{% blocktrans %}Sorry! You have a pending order - <a href='{{ history_url }}'>Cancel it</a>{% endblocktrans %}";
             $('div#top-notice-ctnr span').html(notice);
             $('#top-notice-ctnr').hide().fadeIn().delay(5000).fadeOut();
