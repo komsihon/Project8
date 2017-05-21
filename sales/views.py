@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import datetime, timedelta
+from time import strptime
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -503,6 +504,9 @@ class Dashboard(BaseView):
 
         qs = CashOutRequest.objects.using('wallets').filter(status=CashOutRequest.PAID).order_by('-id')
         last_cash_out = qs[0] if qs.count() >= 1 else None
+        if last_cash_out:
+            # Re-transform created_on into a datetime object
+            last_cash_out.created_on = datetime(*strptime(last_cash_out.created_on[:19], '%Y-%m-%d %H:%M:%S')[:6])
         service = get_service_instance()
         try:
             wallet = OperatorWallet.objects.using('wallets').get(nonrel_id=service.id)
