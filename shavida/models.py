@@ -143,6 +143,7 @@ class OperatorProfile(AbstractConfig):
                 obj_mirror.ikwen_share_fixed = self.ikwen_share_fixed
                 obj_mirror.is_pro_version = self.is_pro_version
                 obj_mirror.max_products = self.max_products
+                obj_mirror.cash_out_min = self.cash_out_min
                 super(OperatorProfile, obj_mirror).save(using=db)
             except OperatorProfile.DoesNotExist:
                 pass
