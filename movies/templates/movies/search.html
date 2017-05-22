@@ -13,7 +13,7 @@
 {% block content %}
     <div id="content" class="container">
         <section class="media-list">
-            <p style="margin: 2em 0 1em">{% trans "Search" %}: <strong>{{ request.GET.radix }}</strong></p>
+            <h3>{% trans "Search" %}: <em class="text-muted">{{ request.GET.radix }}</em></h3>
             <div class="row swiper-container">
                 <div class="swiper-wrapper master">
                     {% for item in results  %}
