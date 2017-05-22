@@ -86,7 +86,7 @@
                 <div class="row payments">
                     <div class="col-xs-6 col-sm-4">
                         <h6 class="text-muted">{% trans "Balance" %}</h6>
-                        <em>{{ wallet.balance|intcomma }}</em>
+                        <em>{{ wallet.balance|floatformat:config.decimal_precision|intcomma }}</em>
                         <div>
                             <a href="{% url 'cashout:home' %}">{% trans "Payment details" %}</a>
                         </div>
@@ -94,7 +94,7 @@
                     {% if last_cash_out %}
                         <div class="col-xs-6 col-sm-3">
                             <h6 class="text-muted">{% trans "Last payment" %}</h6>
-                            <em style="color: #555; display: block; font-size: 25px; width: 100%">{{ config.currency_code }} {{ last_cash_out.amount }}</em>
+                            <em style="color: #555; display: block; font-size: 25px; width: 100%">{{ last_cash_out.amount }}</em>
                             <time style="float: left; font-size: 12px; margin-top: -4px">{{ last_cash_out.created_on|date }}</time>
                             <span style="float: left; font-size: 12px; margin-top: -5px">
                                 <span style="float: left; margin: 0 6px">-</span>
