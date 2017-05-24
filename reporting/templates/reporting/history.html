@@ -45,14 +45,14 @@
                     <ul class="img-list">
                         {% for entry in watched %}
                             <li>
-                                <a href="{% url 'home' %}?play={{ media.id }}#!{{ media.type }}-{{ media.slug }}" class="img" style="background-image: url({% get_media_prefix %}{{ entry.media.poster.name }})">
+                                <a href="{% url 'movies:home' %}?play={{ entry.media.id }}#!{{ entry.media.type }}-{{ entry.media.slug }}" class="img" style="background-image: url({% get_media_prefix %}{{ entry.media.poster.name }})">
                                     <div class="gauge">
                                         <div class="fill" style="width: {{ entry.percentage }}%"></div>
                                     </div>
                                 </a>
                                 <div class="description">
                                     <strong class="title">{{ entry.media.title }}</strong>
-                                    <div class="text-muted">{{ entry.created_on|time:"TIME_FORMAT" }}</div>
+                                    <div class="text-muted">{{ entry.created_on|date }}</div>
                                 </div>
                                 <div class="clearfix"></div>
                             </li>
@@ -79,7 +79,7 @@
                         </div>
                         <div class="row detail">
                             <label class="col-sm-9 col-md-10">
-                                {% trans "Expires on" %}: <em class="text-muted">{{ last_vod_prepayment.get_expiry|time:"TIME_FORMAT"  }}</em>
+                                {% trans "Expires on" %}: <em class="text-muted">{{ last_vod_prepayment.get_expiry|date  }}</em>
                             </label>
                             <a href="{% url 'movies:bundles' %}" class="col-sm-3 col-md-2 action-edit"> {% trans "Extend" %} </a>
                         </div>

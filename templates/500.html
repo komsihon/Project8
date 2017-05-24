@@ -1,0 +1,29 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title> Cinemax Club | 500 Server error </title>
+        <style>
+            #notice {float: left; margin-top: 140px}
+            #branding {float: right; width: 300px}
+            #branding img {width: 100%}
+            #slogan {clear: both; color: #BB7A66; font: normal 17px arial; margin: 5px auto 0; width: 100%}
+        </style>
+    </head>
+    <body style="background: #fff">
+        <div class="wrapper" style="width: 780px; padding-top: 7%">
+            <div id="notice">
+                <header style="font-size: 18px"> HTTP 500 Error </header>
+                <article style="font-size: 14px; margin-top: 24px">
+                    Sorry, an unexpected error occurred on server.<br/><br/>
+                    Please try again later !
+                </article>
+            </div>
+            <div id="branding">
+                <img src="{% static 'media/images/logo_cinemaxclub.png' %}" width="300"/>
+                <div id="slogan"> Le film commence ici </div>
+            </div>
+        </div>
+    </body>
+</html>

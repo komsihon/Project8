@@ -109,19 +109,19 @@ if DEBUG or TESTING:
 else:
     WALLETS_DB = {  # ikwen_kakocase.ikwen_kakocase relational database used to store sensitive objects among which CashOutRequest
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': ''
+        'NAME': 'ikwen_wallets',
+        'USER': 'root',
+        'PASSWORD': 'admin'
     }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_engine',
-        'NAME': '',
+        'NAME': 'shavida',
     },
     'umbrella': {
         'ENGINE': 'django_mongodb_engine',
-        'NAME': '',
+        'NAME': 'ikwen_umbrella',
     },
     'wallets': WALLETS_DB
 }
@@ -186,9 +186,9 @@ IKWEN_REGISTER_EVENTS = (
     'ikwen_shavida.shavida.views.create_member_profile',
 )
 
-LOGIN_URL = 'ikwen:sign_in'
-LOGOUT_REDIRECT_URL = 'movies:home'
-LOGIN_REDIRECT_URL = 'movies:home'
+LOGIN_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'phone_confirmation'
 
 STAFF_ROUTER = (
     ('sales.ik_view_dashboard', 'dashboard'),
@@ -209,7 +209,7 @@ WSGI_SCRIPT_ALIAS = '/shavida'  # Used only for dev purposes (DEBUG = False)
 #  *******       SHAVIDA CONFIGURATION       *******  #
 IS_VOD_OPERATOR = True
 # IS_CONTENT_VENDOR = True
-IS_GAME_VENDOR = True
+# IS_GAME_VENDOR = True
 
 SALES_UNIT = "Volume"
 # SALES_UNIT = "Broadcasting"
@@ -221,9 +221,9 @@ SALES_UNIT = "Volume"
 # return a JSON error message of the form HttpResponse(json.dumps({'error': "Your error message"}))
 NOT_MP4_HANDLER = 'ikwen_shavida.movies.views.queue_for_transcode'
 
-EMAIL_HOST = ''
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'ksihon'
+EMAIL_HOST_PASSWORD = 'L0v!nj!t!s'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 

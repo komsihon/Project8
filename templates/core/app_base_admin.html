@@ -23,11 +23,6 @@
                                 {% url 'ikwen:flatpage_list' as flatpage_list_url %}
                                 <a href="{{ flatpage_list_url }}">{% trans "Pages" %}</a>
                             </li>
-                            <li role="presentation" class="theming">
-                                <a href="{% url 'theming:theme_list' %}">
-                                    {% trans "Theming" %} <span class="label label-danger">New</span>
-                                </a>
-                            </li>
                             <li role="presentation" class="community">
                                 {% url 'ikwen:community' as community_url %}
                                 <a href="{{ community_url }}">{% trans "Community" %}</a>
@@ -35,25 +30,14 @@
                         </ul>
                         <div class="divider"></div>
                         <ul class="nav nav-pills nav-stacked">
-                            {% if config.is_pro_version %}
-                                <li role="presentation" class="payment-means">
-                                    <a href="{% url 'billing:payment_mean_list' %}">
-                                        {% trans "Payment means" %} <span class="label label-danger">New</span>
-                                    </a>
-                                </li>
-                            {% endif %}
+                            <li role="presentation" class="payment-means">
+                                <a href="{% url 'billing:payment_mean_list' %}">
+                                    {% trans "Payment means" %}
+                                </a>
+                            </li>
                             <li role="presentation" class="configuration">
                                 {% url 'ikwen:configuration' as configuration_url %}
                                 <a href="{{ configuration_url }}">{% trans "Configuration" %}</a>
-                            </li>
-                            <li role="presentation" class="invoices">
-                                {% url 'billing:invoice_list' as invoice_list_url %}
-                                <a href="{{ invoice_list_url|ikwenize }}"
-                                   target="_blank">{% trans 'Invoices' %}</a>
-                            </li>
-                            <li role="presentation" class="service-info">
-                                {% url 'ikwen:service_detail' service.id as service_detail_url %}
-                                <a href="{{ service_detail_url }}">{% trans "Info & Billing" %}</a>
                             </li>
                         </ul>
                     {% endif %}

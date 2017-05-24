@@ -14,10 +14,10 @@
     <div id="content" class="container">
         <section class="media-list">
             <h3>{% trans "Search" %}: <em class="text-muted">{{ request.GET.radix }}</em></h3>
-            <div class="row swiper-container">
-                <div class="swiper-wrapper master">
+            <div class="container">
+                <div class="row all">
                     {% for item in results  %}
-                        <div class="col-sm-3 swiper-slide">
+                        <div class="col-xs-4 col-sm-3">
                             <div class='item'>
                                 {% if item.season %}
                                     <div class="poster detail" title="{{ item.full_title }}"
@@ -40,7 +40,6 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="clear"></div>
         </section>
     </div>
 {% endblock %}

@@ -80,13 +80,13 @@
                 </div>
             </div>
             {% if perms.accesscontrol.sudo and not config.is_pro_version or settings.DEBUG %}
-                <h5 style="clear: both">
+                <h5 class="section-title">
                     <span>{% trans "Payments" %} <span class="text-muted">({{ config.currency_code }})</span></span>
                 </h5>
                 <div class="row payments">
                     <div class="col-xs-6 col-sm-4">
                         <h6 class="text-muted">{% trans "Balance" %}</h6>
-                        <em>{{ wallet.balance|floatformat:config.decimal_precision|intcomma }}</em>
+                        <em class="balance">{{ wallet.balance|floatformat:config.decimal_precision|intcomma }}</em>
                         <div>
                             <a href="{% url 'cashout:home' %}">{% trans "Payment details" %}</a>
                         </div>
@@ -94,17 +94,17 @@
                     {% if last_cash_out %}
                         <div class="col-xs-6 col-sm-3">
                             <h6 class="text-muted">{% trans "Last payment" %}</h6>
-                            <em style="color: #555; display: block; font-size: 25px; width: 100%">{{ last_cash_out.amount }}</em>
+                            <em class="last-payment">{{ last_cash_out.amount }}</em>
                             <time style="float: left; font-size: 12px; margin-top: -4px">{{ last_cash_out.created_on|date }}</time>
                             <span style="float: left; font-size: 12px; margin-top: -5px">
-                                <span style="float: left; margin: 0 6px">-</span>
+                                <span class="hidden-xs" style="float: left; margin: 0 6px">-</span>
                                 <a href="{% url 'cashout:home' %}" style="float: left; width: auto">{% trans "View payments" %}</a>
                             </span>
                         </div>
                     {% endif %}
                 </div>
             {% endif %}
-            <h5>
+            <h5 class="section-title perf">
                 <div>
                     <span style="float: left">{% trans "Performances" %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-</span>
                     <div class="dropdown" style="cursor: pointer; float: left; margin-left: 15px">

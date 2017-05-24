@@ -1,10 +1,11 @@
 from django.conf.urls import patterns, include, url
 
 from django.contrib import admin
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import permission_required, login_required
+from ikwen.accesscontrol.views import SignIn
 from ikwen.flatpages.views import FlatPageView
-from ikwen_shavida.movies.views import Home
 from ikwen_shavida.sales.views import Dashboard
+from ikwen_shavida.shavida.views import PhoneConfirmation
 
 admin.autodiscover()
 
@@ -13,7 +14,7 @@ __author__ = "Kom Sihon"
 
 urlpatterns = patterns(
     '',
-    url(r'^$', Home.as_view(), name='home'),
+    url(r'^$', SignIn.as_view(), name='home'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     url(r'^ikwen/admin/', include(admin.site.urls)),
@@ -29,4 +30,5 @@ urlpatterns = patterns(
 
     url(r'^', include('ikwen_shavida.movies.urls', namespace='movies')),
     url(r'^', include('ikwen_shavida.shavida.urls', namespace='shavida')),
+    url(r'^phoneConfirmation$', login_required(PhoneConfirmation.as_view()), name='phone_confirmation'),
 )

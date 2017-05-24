@@ -418,10 +418,8 @@ def stream(request, *args, **kwargs):
         member = request.user
         if media_type == 'movie':
             media = Movie.objects.get(pk=item_id)
-            media.type = 'movie'
         elif media_type == 'series':
             media = SeriesEpisode.objects.get(pk=item_id)
-            media.type = 'series'
         else:
             try:
                 media = Movie.objects.get(pk=item_id).trailer
@@ -565,20 +563,13 @@ def get_recommended_for_single_category(request, *args, **kwargs):
 
 # MAKE_MEDIA_URL
 def make_media_url(request, folder, media, *args, **kwargs):
-    if folder and folder[-1] != '/':
+    if folder[-1] != '/':
         folder += '/'
-    if request.user_agent.is_mobile:
-        if media.resource_mob:
-            if '<iframe ' in media.resource_mob:
-                return extract_resource_url(media.resource_mob)
-            if '://' in media.resource_mob:
-                return media.resource_mob
-            return folder + media.resource_mob
     if '<iframe ' in media.resource:
         return extract_resource_url(media.resource)
     if '://' in media.resource:  # Test whether resource is a URL, then return it as such.
         return media.resource
-    return folder + media.resource
+    return folder + 'creolink+' + media.resource + '/index.m3u8'
 
 
 def get_resource_to_use(request, folder, media):

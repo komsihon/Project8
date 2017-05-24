@@ -200,6 +200,7 @@ form#search .spinner {
     .navbar-default .navbar-brand {max-width: 115px;overflow: hidden;}
     .navbar-default .navbar-brand > * {float: left; width: 300%}
     #navbar-results {border-top: 1px solid #eee}
+    .media-list .col-xs-4 {padding: 0 5px}
 }
 @media (min-width: 768px) {
     #content.container {padding-left: 15px; padding-right: 15px}
