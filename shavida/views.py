@@ -54,15 +54,6 @@ class BaseView(IkwenBaseView):
         return context
 
 
-class Contact(BaseView):
-    template_name = 'contact.html'
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(Contact, self).get_context_data(**kwargs)
-        context['page'] = get_object_or_404(FlatPage, slug='contact')
-        return context
-
-
 def offer_welcome_bundle(request, *args, **kwargs):
     sales_config = SalesConfig.objects.all()[0]
     if sales_config.free_trial:

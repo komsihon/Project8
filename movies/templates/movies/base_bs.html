@@ -93,6 +93,15 @@
                                     <div id="auth" class="top-right">
                                         {% if user.is_authenticated %}
                                             <ul class="navbar-right" style="margin: -5px 0 -6px">
+                                                <li>
+                                                    <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                        <i class="glyphicon glyphicon-bell" aria-hidden="true"
+                                                           style="font-size: 24px; line-height: .4em; margin-top: 10px"></i>
+                                                        {% if user.get_notice_count > 0 %}
+                                                            <span class="label label-danger">{{ user.get_notice_count }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
                                                 <li id="user-menu" class="dropdown">
                                                     <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         {{ user.first_name }}
@@ -113,7 +122,7 @@
                                                             <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
                                                         </li>
                                                         <li>
-                                                            <a href="{{ account_setup_url }}">{% trans "Account setup" %}</a>
+                                                            <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
                                                         </li>
                                                         <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a></li>
                                                     </ul>
@@ -163,6 +172,14 @@
                                                                 </a>
                                                             </li>
                                                         {% endif %}
+                                                        <li>
+                                                            <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                                <i class="glyphicon glyphicon-bell" aria-hidden="true"></i>
+                                                                {% if user.get_notice_count > 0 %}
+                                                                    <span class="label label-danger">{{ user.get_notice_count }}</span>
+                                                                {% endif %}
+                                                            </a>
+                                                        </li>
                                                         <li data-toggle="collapse" data-target="#user-menu-xs" aria-expanded="false">
                                                             <a href="#"><i class="glyphicon glyphicon-user"></i> </a>
                                                         </li>
@@ -241,6 +258,15 @@
                                                         </a>
                                                     </li>
                                                 {% endif %}
+                                                <li class="visible-sm">
+                                                    <a href="{{ settings.IKWEN_CONSOLE_URL }}">
+                                                        <i class="glyphicon glyphicon-bell" aria-hidden="true"
+                                                           style="font-size: 24px; line-height: .4em; margin-top: 8px"></i>
+                                                        {% if user.get_notice_count > 0 %}
+                                                            <span class="label label-danger" style="margin-top: -18px">{{ user.get_notice_count }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
                                                 <li id="user-menu" class="dropdown visible-sm">
                                                     <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <i class="glyphicon glyphicon-user"></i>
@@ -260,7 +286,7 @@
                                                             <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
                                                         </li>
                                                         <li>
-                                                            <a href="{{ account_setup_url }}">{% trans "Account setup" %}</a>
+                                                            <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
                                                         </li>
                                                         <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a> </li>
                                                     </ul>
@@ -289,7 +315,7 @@
                                                 <a href="{% if settings.IS_VOD_OPERATOR %}{{ history_url }}{% else %}{{ history_url|ikwenize }}{% endif %}">{% trans "History" %}</a>
                                             </li>
                                             <li>
-                                                <a href="{{ account_setup_url }}">{% trans "Account setup" %}</a>
+                                                <a href="{{ account_setup_url|ikwenize }}">{% trans "Account setup" %}</a>
                                             </li>
                                             <li><a href="{% url "ikwen:logout" %}">{% trans "Logout" %}</a> </li>
                                         </ul>
