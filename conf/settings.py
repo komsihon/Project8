@@ -108,20 +108,20 @@ if DEBUG or TESTING:
     }
 else:
     WALLETS_DB = {  # ikwen_kakocase.ikwen_kakocase relational database used to store sensitive objects among which CashOutRequest
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ikwen_wallets',
-        'USER': 'root',
-        'PASSWORD': 'admin'
+        'ENGINE': '',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': ''
     }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_engine',
-        'NAME': 'shavida',
+        'NAME': '',
     },
     'umbrella': {
         'ENGINE': 'django_mongodb_engine',
-        'NAME': 'ikwen_umbrella',
+        'NAME': '',
     },
     'wallets': WALLETS_DB
 }
@@ -221,9 +221,9 @@ SALES_UNIT = "Volume"
 # return a JSON error message of the form HttpResponse(json.dumps({'error': "Your error message"}))
 NOT_MP4_HANDLER = 'ikwen_shavida.movies.views.queue_for_transcode'
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'ksihon'
-EMAIL_HOST_PASSWORD = 'L0v!nj!t!s'
+EMAIL_HOST = ''
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
