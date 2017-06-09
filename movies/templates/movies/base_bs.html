@@ -36,7 +36,7 @@
         <div class="swiper-container root">
             <div class="swiper-wrapper">
                 <div id="category-list" class="swiper-slide main" style="display: none">
-                    <div class="visible-xs" style="border-bottom: 1px solid #444; margin-bottom: 1em; padding-bottom: .3em">
+                    <div id="menu-xs" class="visible-xs">
                         <h3>{% trans "Menu" %}</h3>
                         <ul class="nav nav-pills nav-stacked">
                             <li>
@@ -54,13 +54,13 @@
                         {% endif %}
                         {% for category in all_categories %}
                             <li role="presentation" data-id="{{ category.id }}" {% if category == current_category %}class="active"{% endif %}>
-                                <a href="{% url 'movies:media_list' category.slug  %}">{{ category.title }}</a>
+                                <a href="{% url 'movies:media_list' category.slug %}">{{ category.title }}</a>
                             </li>
                         {% endfor %}
                         </ul>
                     </div>
                     <div class="menu-footer">
-                        <p>
+                        <p style="color: #FF9800">
                             <i class="glyphicon glyphicon-earphone" aria-hidden="true" style="margin-right: 5px; top: 3px"></i>{{ config.contact_phone }}
                         </p>
                         <p>
@@ -493,7 +493,7 @@
                         slideToClickedSlide: true
                     });
                     {# End Swiper menu #}
-                    $('.payment-method').click(function() {
+                    $('.payment-method:not(.om)').click(function() {
                         var actionURL = $(this).data('action-url');
                         $('form#checkout').attr('action', actionURL).submit();
                     });

@@ -189,6 +189,8 @@ form#search .spinner {
 /*#category-list li {background: #2c3e50;border-radius: 15px;display: inline-block;padding: 3px 15px;height: 30px;float: left;width: auto;margin-right: 10px;}*/
 #category-list li a {color: #ddd}
 #category-list li.active a, #category-list li a:hover {background: #111}
+#menu-xs {border-bottom: 1px solid #7d5e00; margin-bottom: 1em; padding-bottom: .3em;}
+#menu-xs h3, #menu-xs li a {color: #FFC107}
 
 #content.container {padding: 50px 0 0;}
 
