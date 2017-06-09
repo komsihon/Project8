@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import datetime, timedelta
-from time import strptime
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -16,12 +15,11 @@ from django.utils.translation import gettext as _
 from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
 from ikwen.billing.models import PaymentMean
-from ikwen.cashout.models import CashOutRequest
 from ikwen.conf.settings import MOMO_SLUG, FALLBACK_SHARE_RATE
-from ikwen.core.models import Service, OperatorWallet
+from ikwen.core.models import Service
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
     add_event, calculate_watch_info, rank_watch_objects
-from ikwen.core.views import BaseView
+from ikwen.core.views import DashboardBase
 from ikwen.partnership.models import ApplicationRetailConfig, PartnerProfile
 from ikwen_shavida.movies.models import Movie, Series
 from ikwen_shavida.movies.views import CustomerView
@@ -442,17 +440,17 @@ def render_order_event(event, request):
     return html_template.render(c)
 
 
-class Dashboard(BaseView):
+class Dashboard(DashboardBase):
     template_name = 'sales/dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super(Dashboard, self).get_context_data(**kwargs)
         service = get_service_instance()
         set_counters(service)
-        earnings_today = calculate_watch_info(service.earnings_history)
-        earnings_yesterday = calculate_watch_info(service.earnings_history, 1)
-        earnings_last_week = calculate_watch_info(service.earnings_history, 7)
-        earnings_last_28_days = calculate_watch_info(service.earnings_history, 28)
+        earnings_today = context['earnings_report']['today']
+        earnings_yesterday = context['earnings_report']['yesterday']
+        earnings_last_week = context['earnings_report']['last_week']
+        earnings_last_28_days = context['earnings_report']['last_28_days']
 
         orders_count_today = calculate_watch_info(service.custom_service_count_history)
         orders_count_yesterday = calculate_watch_info(service.custom_service_count_history, 1)
@@ -502,20 +500,6 @@ class Dashboard(BaseView):
             'last_28_days': rank_watch_objects(customers, 'turnover_history', 28)
         }
 
-        qs = CashOutRequest.objects.using('wallets').filter(status=CashOutRequest.PAID).order_by('-id')
-        last_cash_out = qs[0] if qs.count() >= 1 else None
-        if last_cash_out:
-            # Re-transform created_on into a datetime object
-            last_cash_out.created_on = datetime(*strptime(last_cash_out.created_on[:19], '%Y-%m-%d %H:%M:%S')[:6])
-        service = get_service_instance()
-        try:
-            wallet = OperatorWallet.objects.using('wallets').get(nonrel_id=service.id)
-            context['wallet'] = wallet
-        except:
-            pass
-
-        context['earnings_report'] = earnings_report
-        context['last_cash_out'] = last_cash_out
         context['orders_report'] = orders_report
         context['customers_report'] = customers_report
         return context

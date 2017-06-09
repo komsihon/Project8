@@ -13,7 +13,7 @@ from django.template import Context
 from django.template.defaultfilters import slugify
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
-from ikwen_shavida.movies.models import Movie, Series, SeriesEpisode
+from ikwen_shavida.movies.models import Movie, Series
 from ikwen_shavida.sales.models import SalesConfig
 from ikwen_shavida.shavida.models import OperatorProfile
 from permission_backend_nonrel.models import UserPermissionList, GroupPermissionList
