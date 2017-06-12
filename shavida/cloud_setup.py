@@ -19,7 +19,7 @@ from ikwen_shavida.shavida.models import OperatorProfile
 from permission_backend_nonrel.models import UserPermissionList, GroupPermissionList
 
 from ikwen.accesscontrol.backends import UMBRELLA
-from ikwen.accesscontrol.models import SUDO
+from ikwen.accesscontrol.models import SUDO, Member
 from ikwen.billing.models import Invoice, PaymentMean, InvoicingConfig, JUMBOPAY_MOMO
 from ikwen.billing.utils import get_next_invoice_number
 from ikwen.conf.settings import STATIC_ROOT, STATIC_URL, MEDIA_ROOT, MEDIA_URL
@@ -36,9 +36,11 @@ __author__ = 'Kom Sihon'
 from django import forms
 
 if getattr(settings, 'LOCAL_DEV', False):
-    CLOUD_FOLDER = '/home/komsihon/PycharmProjects/CloudTest/Shavida/'
+    CLOUD_HOME = '/home/komsihon/PycharmProjects/CloudTest/'
 else:
-    CLOUD_FOLDER = '/home/ikwen/Cloud/Shavida/'
+    CLOUD_HOME = '/home/ikwen/Cloud/'
+
+CLOUD_FOLDER = CLOUD_HOME + 'Shavida/'
 
 
 # from captcha.fields import ReCaptchaField
@@ -93,13 +95,16 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
         domain = ikwen_name + '.shavida.com'
         domain_type = Service.SUB
         is_naked_domain = False
-    admin_url = domain + '/ikwen' + reverse('ikwen:staff_router')
+    if getattr(settings, 'IS_UMBRELLA', False):
+        admin_url = domain + '/ikwen' + reverse('ikwen:staff_router')
+    else:  # This is a deployment performed by a partner retailer
+        admin_url = domain + reverse('ikwen:staff_router')
     is_pro_version = billing_plan.is_pro_version
     now = datetime.now()
     expiry = now + timedelta(days=15)
 
     # Create a copy of template application in the Cloud folder
-    app_folder = CLOUD_FOLDER + '000Tpl/AppSkeleton'
+    app_folder = CLOUD_HOME + '000Tpl/AppSkeleton'
     website_home_folder = CLOUD_FOLDER + ikwen_name
     media_root = MEDIA_ROOT + ikwen_name + '/'
     media_url = MEDIA_URL + ikwen_name + '/'
@@ -149,7 +154,7 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     add_database_to_settings(database)
     for group in Group.objects.using(database).all():
         try:
-            gpl = GroupPermissionList.objects.get(group=group)
+            gpl = GroupPermissionList.objects.using(database).get(group=group)
             group.delete()
             group.save(using=database)   # Recreate the group in the service DB with a new id.
             gpl.group = group    # And update GroupPermissionList object with the newly re-created group
@@ -159,11 +164,21 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
             group.save(using=database)  # Re-create the group in the service DB with anyway.
     new_sudo_group = Group.objects.using(database).get(name=SUDO)
 
-    if service.id not in member.collaborates_on_fk_list:
-        member.collaborates_on_fk_list.append(service.id)
-    if service not in member.customer_on_fk_list:
-        member.customer_on_fk_list.append(service.id)
-    member.group_fk_list.append(new_sudo_group.id)
+    for s in member.get_services():
+        db = s.database
+        add_database_to_settings(db)
+        collaborates_on_fk_list = member.collaborates_on_fk_list + [service.id]
+        customer_on_fk_list = member.customer_on_fk_list + [service.id]
+        if partner_retailer and partner_retailer.id not in customer_on_fk_list:
+            customer_on_fk_list += [partner_retailer.id]
+        group_fk_list = member.group_fk_list + [new_sudo_group.id]
+        Member.objects.using(db).filter(pk=member.id).update(collaborates_on_fk_list=collaborates_on_fk_list,
+                                                             customer_on_fk_list=customer_on_fk_list,
+                                                             group_fk_list=group_fk_list)
+
+    member.collaborates_on_fk_list = collaborates_on_fk_list
+    member.customer_on_fk_list = customer_on_fk_list
+    member.group_fk_list = group_fk_list
 
     member.is_iao = True
     member.save(using=UMBRELLA)
@@ -257,11 +272,14 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     add_event(vendor, SERVICE_DEPLOYED, member=member, object_id=invoice.id)
     if partner_retailer:
         partner_profile = PartnerProfile.objects.using(UMBRELLA).get(service=partner_retailer)
-        member.is_iao = False
-        member.is_bao = False
-        member.is_staff = False
-        member.is_superuser = False
-        member.save(using='default')
+        try:
+            Member.objects.get(pk=member.id)
+        except Member.DoesNotExist:
+            member.is_iao = False
+            member.is_bao = False
+            member.is_staff = False
+            member.is_superuser = False
+            member.save(using='default')
         service.save(using='default')
         config.save(using='default')
         sender = '%s <no-reply@%s>' % (partner_profile.company_name, partner_retailer.domain)
