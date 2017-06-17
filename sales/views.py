@@ -466,12 +466,6 @@ class Dashboard(DashboardBase):
         aepo_last_28_days = earnings_last_28_days['total'] / orders_count_last_28_days['total']\
             if orders_count_last_28_days and orders_count_last_28_days['total'] else 0
 
-        earnings_report = {
-            'today': earnings_today,
-            'yesterday': earnings_yesterday,
-            'last_week': earnings_last_week,
-            'last_28_days': earnings_last_28_days
-        }
         orders_report = {
             'today': {
                 'count': orders_count_today['total'] if orders_count_today else 0,
