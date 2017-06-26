@@ -22,7 +22,7 @@ from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
 from ikwen.billing.models import Invoice, PaymentMean, InvoicingConfig, JUMBOPAY_MOMO
 from ikwen.billing.utils import get_next_invoice_number
-from ikwen.conf.settings import STATIC_ROOT, STATIC_URL, MEDIA_ROOT, MEDIA_URL
+from ikwen.conf.settings import IKWEN_SERVICE_ID, STATIC_ROOT, STATIC_URL, MEDIA_ROOT, MEDIA_URL
 from ikwen.core.models import Service, OperatorWallet, SERVICE_DEPLOYED
 from ikwen.core.tools import generate_django_secret_key, generate_random_key
 from ikwen.core.utils import add_database_to_settings, add_event, get_mail_content, \
@@ -269,7 +269,9 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
                       months_count=billing_plan.setup_months_count)
     invoice.save(using=UMBRELLA)
     vendor = get_service_instance()
-    add_event(vendor, SERVICE_DEPLOYED, member=member, object_id=invoice.id)
+
+    if member != vendor.member:
+        add_event(vendor, SERVICE_DEPLOYED, member=member, object_id=invoice.id)
     if partner_retailer:
         partner_profile = PartnerProfile.objects.using(UMBRELLA).get(service=partner_retailer)
         try:
@@ -284,6 +286,9 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
         config.save(using='default')
         sender = '%s <no-reply@%s>' % (partner_profile.company_name, partner_retailer.domain)
         sudo_group = Group.objects.get(name=SUDO)
+        ikwen = Service.objects.using(UMBRELLA).get(pk=IKWEN_SERVICE_ID)
+        ikwen_sudo_gp = Group.objects.using(UMBRELLA).get(name=SUDO)
+        add_event(ikwen, SERVICE_DEPLOYED, group_id=ikwen_sudo_gp.id, object_id=invoice.id)
     else:
         sender = 'ikwen <no-reply@ikwen.com>'
         sudo_group = Group.objects.using(UMBRELLA).get(name=SUDO)
