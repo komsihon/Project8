@@ -457,7 +457,7 @@ def stream(request, *args, **kwargs):
                     }
                     return HttpResponse(json.dumps(response), 'content-type: text/json')
                 if media.is_adult:
-                    if not (latest_vod_prepayment.adult_authorized and member.adult_authorized):
+                    if not latest_vod_prepayment.adult_authorized:
                         vod_bundles = list(VODBundle.objects.filter(adult_authorized=True).order_by('cost'))
                         vod_bundle = vod_bundles[0] if len(vod_bundles) > 0 else None
                         currency = config.currency_symbol
