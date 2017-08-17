@@ -213,13 +213,13 @@ def share_payment_and_set_stats(customer, amount):
     service_umbrella = get_service_instance(UMBRELLA)
     app_umbrella = service_umbrella.app
     profile_umbrella = service_umbrella.config
-    ikwen_earnings = amount * profile_umbrella.ikwen_share_rate / 100
-    ikwen_earnings += profile_umbrella.ikwen_share_fixed
-    operator_earnings = amount - ikwen_earnings
-    if ikwen_earnings > amount:
+    ikwen_earnings_rate = amount * profile_umbrella.ikwen_share_rate / 100
+    ikwen_earnings_fixed = profile_umbrella.ikwen_share_fixed
+    if ikwen_earnings_fixed > (amount / 10):
         fallback_rate = max(profile_umbrella.ikwen_share_rate, FALLBACK_SHARE_RATE)
-        ikwen_earnings = amount * fallback_rate / 100
-        operator_earnings = amount - ikwen_earnings
+        ikwen_earnings_fixed = amount * fallback_rate / 100
+    ikwen_earnings = ikwen_earnings_rate + ikwen_earnings_fixed
+    operator_earnings = amount - ikwen_earnings
 
     profile_umbrella.raise_balance(operator_earnings)
 
