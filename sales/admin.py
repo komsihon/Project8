@@ -55,7 +55,7 @@ class RetailBundleAdmin(admin.ModelAdmin):
 
 
 class VODBundleAdmin(admin.ModelAdmin):
-    list_display = ('volume', 'cost', 'duration', 'adult_authorized', 'comment')
+    list_display = ('cost', 'duration', 'adult_authorized', 'comment')
     readonly_fields = ('created_on', )
     ordering = ('cost', )
 
