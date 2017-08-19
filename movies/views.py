@@ -408,10 +408,8 @@ def stream(request, *args, **kwargs):
         member = request.user
         if media_type == 'movie':
             media = Movie.objects.get(pk=item_id)
-            media.type = 'movie'
         elif media_type == 'series':
             media = SeriesEpisode.objects.get(pk=item_id)
-            media.type = 'series'
         else:
             try:
                 media = Movie.objects.get(pk=item_id).trailer
