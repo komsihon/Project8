@@ -5,7 +5,9 @@
         /**************************   VOD HANDLERS    *************************/
         /**********************************************************************/
         var type, id, player, _timerId;
-        $('body').on('click', '.play-media:not(.connect), .play-trailer', function() {
+        $('body').on('click', '.play-media.connect', function() {
+            $('#login-to-continue').modal('show')
+        }).on('click', '.play-media:not(.connect), .play-trailer', function() {
             type = $(this).data('type');
             id = $(this).data('id');
             var streamEndpoint = '{% url 'movies:stream' %}',

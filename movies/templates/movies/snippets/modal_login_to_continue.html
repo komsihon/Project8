@@ -1,0 +1,23 @@
+{% load i18n static humanize %}
+<div class="modal fade" id="login-to-continue" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content modal-info">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{% trans "Sign in" %}</h4>
+            </div>
+            <div class="modal-body">
+                <p class="col-xs-12" style="margin-bottom: 1em">{% trans "Please sign in to continue" %}</p>
+                <div class="col-xs-12 col-sm-4 col-md-3 pull-right">
+                    <a href="{% url 'ikwen:sign_in' %}"
+                       class="btn btn-sm btn-success btn-block do-empty-cart">{% trans "Sign in" %}</a>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-3 pull-right">
+                    <a href="{% url 'ikwen:register' %}"
+                       class="btn btn-sm btn-warning btn-block">{% trans "Register" %}</a>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
