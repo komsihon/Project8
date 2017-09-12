@@ -90,6 +90,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.static",
     "django.contrib.messages.context_processors.messages",
     'django.core.context_processors.request',
+    'ikwen.billing.context_processors.payment_means',
     'ikwen_shavida.shavida.context_processors.project_settings',
 )
 
