@@ -26,10 +26,10 @@
                                     <span class="cost">{{ config.currency_symbol }} {{ bundle.cost|floatformat:config.decimal_precision|intcomma }}</span>
                                     {% if user.is_authenticated %}
                                     <button class="btn btn-success btn-block btn-sm cta order"
-                                            data-id="{{ bundle.id }}" data-duration="{{ bundle.duration }}">{% trans "Choose" %}</button>
+                                            data-id="{{ bundle.id }}" data-duration="{{ bundle.duration }}">{% trans "Buy Now" %}</button>
                                     {% else %}
                                         <a href="{% url 'ikwen:sign_in' %}?next={{ request.get_full_path }}" class="btn btn-sm btn-success cta" style="width: 100%">
-                                            {% trans "Choose" %}
+                                            {% trans "Buy Now" %}
                                         </a>
                                     {% endif %}
                                 </div>

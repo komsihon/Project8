@@ -1,0 +1,41 @@
+body {color: #545454}
+.header-top {background: #6b1f3f;}
+.header-top a, #navbar .header-top .glyphicon {color: #ffc98e}
+.icon-bar {background: #6d0834;}
+#navbar {background-color: #e84c8f;}
+#navbar .glyphicon {color: #6d0834}
+#item-detail #navbar .glyphicon {color: #fff}
+.navbar-default .navbar-brand, .navbar-default .navbar-brand {color: #4e0b28;}
+.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {color: #ffcee3;}
+.navbar-default .navbar-nav>li>a, .navbar-default .navbar-nav>li>a, #nav-xs a {color: #4e0b28;}
+.navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus, #nav-xs a {color: #fff;}
+@media (min-width: 768px) {
+    #navbar-search input {border-bottom-color: #6d0834;}
+    #item-detail #navbar-search input {border-bottom-color: #fff;}
+}
+#category-list {
+    background-color: #250010;
+}
+#category-list li.active a, #category-list li a:hover {
+    background: #0e0006;
+}
+#category-list h3 {color: #b5b5b5}
+#user-menu-xs {border-top: 1px solid #d0427f;background-color: #e84c8f;}
+#user-menu-xs li {border-bottom: 1px solid #d0427f;}
+@media (min-width: 972px) {    
+    .item:hover {box-shadow: 1px 1px 9px 4px rgba(255, 0, 0, 0.35)}
+}
+.main-title {color: #4c303c;}
+.btn-success {background-color: #f17fb0;border-color: #f17fb0;color: #2f0014;}
+.btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success:focus:hover, .btn-success:active:hover {background-color: #E91E63;border-color: #E91E63;}
+.btn-primary {background-color: #9a315e;border-color: #9a315e;}
+.play-media, .order-media, .play-media:hover, .order-media:hover {background: #e84c8f; border: 2px solid #e84c8f}
+.play-trailer, .play-trailer:hover {color: #e84c8f}
+#content > section > h3 {color: #4c303c;}
+#content > section > h3 a {color: #6b1f3f;}
+#content > section > h3 a:hover {color: #EC2026}
+#item-detail .bg {background: #e84c8f;}
+
+.bundle {border-color: #eaeaea;}
+.bundle .title {background: none;border-bottom: 2px solid #eaeaea;color: #580d2d;}
+.bundle .about span.cost {color: #9a315e}

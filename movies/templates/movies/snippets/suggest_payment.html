@@ -1,4 +1,4 @@
-{% load i18n staticfiles %}
+{% load i18n static humanize %}
 <img src="{% static 'shavida/img/embarassed-smiley.jpg' %}"/>
 <p class="error"></p>
 <div class="{% if config.allow_unit_prepayment %}col-sm-5{% else %}col-sm-6 col-sm-offset-3{% endif %}">
@@ -14,7 +14,7 @@
         </p>
         <p style="margin-top: 5px">
             <strong>{% trans "Cost" %}:</strong>
-            <em class="text-muted">{{ config.currency_symbol }} {{ media.price }}</em>
+            <em class="text-muted">{{ config.currency_symbol }} {{ media.view_price|floatformat:config.decimal_precision|intcomma }}</em>
         </p>
     </div>
 {% endif %}

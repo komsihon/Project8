@@ -21,7 +21,8 @@ if getattr(settings, 'IS_IKWEN', False):
         (_('Business'), {'fields': ('ikwen_share_rate', 'ikwen_share_fixed', 'cash_out_min',)}),
         (_('Platform'), {'fields': ('is_pro_version',)}),
         (_('SMS'), {'fields': ('sms_api_script_url', 'sms_api_username', 'sms_api_password',)}),
-        (_('Mailing'), {'fields': ('welcome_message', 'signature',)})
+        (_('Mailing'), {'fields': ('welcome_message', 'signature',)}),
+        (_('Website'), {'fields': ('theme',)})
     ]
     _readonly_fields = ()
 else:

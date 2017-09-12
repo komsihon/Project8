@@ -56,9 +56,9 @@
             params = {format: 'json', category_id: category.id, start_movies: 0, start_series: 0},
             movies = [];
         if (category.previewsTitle != 'None' && category.previewsTitle != '' )
-            $newSection.insertBefore('section.tpl').addClass(category.slug).show().find('h3 span').text(category.previewsTitle);
+            $newSection.insertBefore('section.tpl').addClass(category.slug).show().find('h3 span').html(category.previewsTitle);
         else
-            $newSection.insertBefore('section.tpl').addClass(category.slug).show().find('h3 span').text(category.title);
+            $newSection.insertBefore('section.tpl').addClass(category.slug).show().find('h3 span').html(category.title);
         templateFunction($newSection, category);
         $.getJSON(endPoint, params, function(data) {
             if (data.error)

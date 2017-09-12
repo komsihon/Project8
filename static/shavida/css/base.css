@@ -203,6 +203,7 @@ form#search .spinner {
     .navbar-default .navbar-brand > * {float: left; width: 300%}
     #navbar-results {border-top: 1px solid #eee}
     .media-list .col-xs-4 {padding: 0 5px}
+    .streaming-error img {width: 60px}
 }
 @media (min-width: 768px) {
     #content.container {padding-left: 15px; padding-right: 15px}
@@ -553,8 +554,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', end
 #lightbox .dialog.player.spinner, #lightbox .dialog.bundle-sold-out.spinner {float: none} /* Cancels rule float: left set by class .spinner */
 #lightbox .dialog.player.stream {background-color: #000;transition: background-color .3s}
 #lightbox iframe {border: none; display: block; margin: auto}
-#lightbox .streaming-error, #lightbox .dialog.bundle-sold-out .streaming-error {padding: 36px 15px;background: #fff;text-align: center;margin: auto;}
-#lightbox .streaming-error p.error, #lightbox .dialog.bundle-sold-out .streaming-error p.error {font-size: 1.3em; line-height: 1.8em; margin-top: 18px}
+#lightbox .streaming-error, #lightbox .dialog.bundle-sold-out .streaming-error {padding: 24px 15px;background: #fff;text-align: center;margin: -60px auto;}
+#lightbox .streaming-error p.error, #lightbox .dialog.bundle-sold-out .streaming-error p.error {font-size: 1em; line-height: 1.2em; margin-top: 15px}
 #video-stage {width: 100%; height: 100%}
 
 .bundle {border: 2px solid #000;box-shadow: 1px 1px 9px 4px rgba(0, 0, 0, 0);margin-bottom: 2em;transition: box-shadow .3s;border-radius: 4px;}
@@ -581,6 +582,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', end
     /*#lightbox .dialog.player.stream {padding-top: 33px;}*/
     #payment-methods ul {margin-top: 15px}
     .payment-method {display: inline}
+    #lightbox .streaming-error p.error, #lightbox .dialog.bundle-sold-out .streaming-error p.error {font-size: 1.3em; line-height: 1.8em; margin-top: 18px}
+    #lightbox .streaming-error, #lightbox .dialog.bundle-sold-out .streaming-error {padding: 36px 15px;background: #fff;text-align: center;margin: 0 auto;}
 }
 
 @media (min-width: 992px) {

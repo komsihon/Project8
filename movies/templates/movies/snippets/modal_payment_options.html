@@ -13,7 +13,7 @@
                     <input type="hidden" id="media-type" name="media_type" />
                     <ul class="row">
                         <li class="col-sm-4 payment-method{% if not config.is_pro_version and not config.allow_cash_payment %} col-sm-offset-2{% endif %}"
-                            data-action-url="{{ momo_action_url }}">
+                            data-action-url="{% url mtn_momo.action_url_name %}">
                             <a style="background: #ffca06" title="{% trans "Pay with MTN Mobile Money" %}">
                                 <img src="{% static 'shavida/img/logo_mtn_mobile_money.jpg' %}" height="90"/>
                             </a>

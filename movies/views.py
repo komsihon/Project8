@@ -170,8 +170,6 @@ class Bundles(CustomerView):
                 else:
                     bundle.quantity /= 60
             context['bundles'] = bundles
-        momo = PaymentMean.objects.get(slug=MOMO_SLUG)
-        context['momo_action_url'] = reverse(momo.action_url_name)
         context['is_bundle_page'] = True
         return context
 

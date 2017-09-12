@@ -172,8 +172,8 @@ class Movie(Media):
     poster = MultiImageField(upload_to='movies', blank=True, null=True)
     price = models.PositiveIntegerField(default=0, editable=is_content_vendor,
                                         help_text=_("Cost of sale of this movie to VOD operators."))
-    view_price = models.PositiveIntegerField(default=0,
-                                             help_text=_("Cost to view this movie in streaming."))
+    view_price = models.FloatField(default=0,
+                                   help_text=_("Cost to view this movie in streaming."))
     trailer_resource = models.CharField(max_length=255, blank=True, null=True,
                                help_text=_("Filename (Eg: <strong>Avatar.mob.mp4</strong>), URL "
                                            "Embed code (Eg: <strong>&lt;iframe src='...'&gt;&lt;/iframe&gt;</strong>) "
