@@ -120,6 +120,11 @@ class CustomerAdmin(ExportMixin, admin.ModelAdmin):
             use_distinct = False
         return queryset, use_distinct
 
+try:
+    from currencies.models import Currency
+    admin.site.unregister(Currency)
+except NotRegistered:
+    pass
 
 # Unregister ikwen billing models
 if not getattr(settings, 'IS_UMBRELLA', False):

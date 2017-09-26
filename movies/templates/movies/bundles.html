@@ -1,5 +1,5 @@
 {% extends 'movies/base_bs.html' %}
-{% load i18n staticfiles humanize auth_tokens %}
+{% load i18n staticfiles humanize currency %}
 
 {% block page_title %}
 <title>{% trans "Bundles" %} - {{ service.project_name }}</title>
@@ -23,7 +23,7 @@
                                     <li>{{ bundle.comment }}</li>
                                 </ul>
                                 <div style="padding: 0 15px; text-align: center">
-                                    <span class="cost">{{ config.currency_symbol }} {{ bundle.cost|floatformat:config.decimal_precision|intcomma }}</span>
+                                    <span class="cost">{{ CURRENCY.symbol }} {{ bundle.cost|currency:CURRENCY.code|floatformat:CURRENCY.precision|intcomma }}</span>
                                     {% if user.is_authenticated %}
                                     <button class="btn btn-success btn-block btn-sm cta order"
                                             data-id="{{ bundle.id }}" data-duration="{{ bundle.duration }}">{% trans "Buy Now" %}</button>

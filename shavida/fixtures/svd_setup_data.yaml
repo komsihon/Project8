@@ -32,7 +32,7 @@
     service: 54ad2bd9b37b335a18fe5801
     logo: logo/some_logo.png
     contact_email: contact@shavida.com
-    vod: Yes
+#    vod: Yes
     currency_code: XAF
     currency_symbol: XAF
     ikwen_share_rate: 5
@@ -43,8 +43,18 @@
   pk: 5880870e4fc0c229da8da3d2
   fields:
     name: Mobile Money
-    slug: jumbopay-momo
-    credentials: '{"api_key":"c18c884c0a3fcc756f81e0b28d636208"}'
+    slug: mtn-momo
+    credentials: '{"merchant_email":"merchant@ikwen.com"}'
     action_url_name: billing:momo_set_checkout
     logo: logo.png
     watermark: watermark.png
+
+- model: currencies.currency
+  pk: 580e4fc0c228da3d280879c1
+  fields:
+    code: XAF
+    name: Central African Franc
+    symbol: XAF
+    is_base: Yes
+    is_default: Yes
+    is_active: Yes

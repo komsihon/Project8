@@ -76,13 +76,8 @@
     {{ block.super }}
     <script type="text/javascript">
         (function() {
-            {% if request.GET.accountCreated %}
-                $('.top-notice-ctnr span').html("{% trans "Your account was successfully created." %}");
-                $('.top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
-            {% endif %}
-            {% if request.GET.bundleChosen %}
-                $('#top-notice-ctnr span').html("{% trans "Your bundle was successfully activated." %}");
-                $('#top-notice-ctnr').fadeIn('slow').delay(7000).fadeOut();
+            {% if messages %}
+                {% for msg in messages %}ikwen.showFloatingNotice('{{ msg }}', '', 6);{% endfor %}
             {% endif %}
             $('div#lightbox .dialog.confirm-adult button.confirm').click(function() {
                 $('body, button').css('cursor', 'wait');

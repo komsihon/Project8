@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.db.models import Q
 from django.utils.translation import gettext as _
+from ikwen.core.constants import CONFIRMED
 from ikwen.core.utils import get_service_instance
 from import_export import resources
 from import_export.admin import ExportMixin
@@ -14,6 +15,9 @@ from ikwen_shavida.conf.utils import is_vod_operator, is_content_vendor
 from ikwen_shavida.reporting.utils import sync_changes
 from ikwen_shavida.sales.models import SalesConfig, RetailBundle, RetailPrepayment, VODBundle, VODPrepayment, Prepayment, \
     ContentUpdate, UnitPrepayment
+
+
+allow_cash_payment = get_service_instance().config.allow_cash_payment
 
 
 class RetailPrepaymentResource(resources.ModelResource):
@@ -62,31 +66,55 @@ class VODBundleAdmin(admin.ModelAdmin):
 
 class RetailPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = RetailPrepaymentResource
-    list_display = ('member', 'created_on', 'paid_on', 'amount', 'balance', 'duration', 'status')
-    list_filter = ('created_on', 'status', )
-    search_fields = ('member_email', 'member_phone', )
+    if allow_cash_payment:
+        list_display = ('member', 'created_on', 'paid_on', 'amount', 'balance', 'duration', 'status')
+        list_filter = ('created_on', 'status', )
+    else:
+        list_display = ('member', 'paid_on', 'amount', 'balance', 'duration')
+        list_filter = ('paid_on', )
     readonly_fields = ('member', 'created_on', 'paid_on')
+    search_fields = ('member_email', 'member_phone', )
+    ordering = ('-id', )
+
+    def get_queryset(self, request):
+        config = get_service_instance().config
+        if config.allow_cash_payment:
+            return super(RetailPrepaymentAdmin, self).get_queryset(request)
+        return RetailPrepayment.objects.filter(status=CONFIRMED)
 
     def get_search_results(self, request, queryset, search_term):
+        if not search_term:
+            return super(RetailPrepaymentAdmin, self).get_search_results(request, queryset, search_term)
         try:
             int(search_term)
             members = list(Member.objects.filter(
                 Q(phone__contains=search_term) | Q(email__icontains=search_term.lower())
             ))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         except ValueError:
             members = list(Member.objects.filter(email__icontains=search_term.lower()))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         return queryset, use_distinct
 
 
 class VODPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = VODPrepaymentResource
-    list_display = ('member', 'created_on', 'paid_on', 'amount', 'balance', 'duration', 'status')
-    list_filter = ('created_on', 'amount', 'status', )
+    if allow_cash_payment:
+        list_display = ('member', 'created_on', 'paid_on', 'amount', 'duration', 'status')
+        list_filter = ('created_on', 'amount', 'status', )
+    else:
+        list_display = ('member', 'paid_on', 'amount', 'duration')
+        list_filter = ('paid_on', 'amount', )
     search_fields = ('member_email', 'member_phone',)
+    ordering = ('-id', )
+
+    def get_queryset(self, request):
+        config = get_service_instance().config
+        if config.allow_cash_payment:
+            return super(VODPrepaymentAdmin, self).get_queryset(request)
+        return VODPrepayment.objects.filter(status=CONFIRMED)
 
     def get_readonly_fields(self, request, obj=None):
         if obj.status == Prepayment.PENDING:
@@ -102,26 +130,33 @@ class VODPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
         super(VODPrepaymentAdmin, self).save_model(request, obj, form, change)
 
     def get_search_results(self, request, queryset, search_term):
+        if not search_term:
+            return super(VODPrepaymentAdmin, self).get_search_results(request, queryset, search_term)
         try:
             int(search_term)
             members = list(Member.objects.filter(
                 Q(phone__contains=search_term) | Q(email__icontains=search_term.lower())
             ))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         except ValueError:
             members = list(Member.objects.filter(email__icontains=search_term.lower()))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         return queryset, use_distinct
 
 
 class UnitPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ('member', 'get_media', 'amount', 'created_on', 'paid_on', 'teller')
-    list_filter = ('created_on', 'paid_on', 'status', )
+    if allow_cash_payment:
+        list_display = ('member', 'get_media', 'amount', 'created_on', 'paid_on', 'teller', 'status')
+        list_filter = ('created_on', 'amount', 'status', )
+    else:
+        list_display = ('member', 'get_media', 'paid_on', 'amount', 'duration')
+        list_filter = ('paid_on', 'amount', )
     search_fields = ('member_email', 'member_phone',)
     readonly_fields = ('member', 'amount', 'duration', 'teller',
                        'media_type', 'media_id', 'created_on', 'paid_on', 'expiry')
+    ordering = ('-id', )
 
     def save_model(self, request, obj, form, change):
         if change:
@@ -131,17 +166,25 @@ class UnitPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
                 obj.expiry = obj.paid_on + timedelta(days=obj.duration)
         super(UnitPrepaymentAdmin, self).save_model(request, obj, form, change)
 
+    def get_queryset(self, request):
+        config = get_service_instance().config
+        if config.allow_cash_payment:
+            return super(UnitPrepaymentAdmin, self).get_queryset(request)
+        return UnitPrepayment.objects.filter(status=CONFIRMED)
+
     def get_search_results(self, request, queryset, search_term):
+        if not search_term:
+            return super(UnitPrepaymentAdmin, self).get_search_results(request, queryset, search_term)
         try:
             int(search_term)
             members = list(Member.objects.filter(
                 Q(phone__contains=search_term) | Q(email__icontains=search_term.lower())
             ))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         except ValueError:
             members = list(Member.objects.filter(email__icontains=search_term.lower()))
-            queryset = self.model.objects.filter(member__in=members)
+            queryset = self.get_queryset(request).filter(member__in=members)
             use_distinct = False
         return queryset, use_distinct
 

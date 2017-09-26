@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'django_user_agents',
     'import_export',
     'tracking',
+    'currencies',
 
     'ikwen.core',
     'ikwen.cashout',
@@ -82,6 +83,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.static",
     "django.contrib.messages.context_processors.messages",
     'django.core.context_processors.request',
+    'currencies.context_processors.currencies',
     'ikwen.billing.context_processors.payment_means',
     'ikwen_shavida.shavida.context_processors.project_settings',
 

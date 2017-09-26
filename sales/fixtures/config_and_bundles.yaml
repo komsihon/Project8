@@ -20,7 +20,7 @@
   pk: 579b624b37b33531eb6d0e01
   fields:
     volume: 2000
-    cost: 500
+    cost: 10000
     duration: 3
 
 - model: sales.vodbundle

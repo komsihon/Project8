@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'django_user_agents',
     'import_export',
     'tracking',
+    'currencies',
 
     # ikwen
     'ikwen.core',
@@ -90,6 +91,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.static",
     "django.contrib.messages.context_processors.messages",
     'django.core.context_processors.request',
+    'currencies.context_processors.currencies',
     'ikwen.billing.context_processors.payment_means',
     'ikwen_shavida.shavida.context_processors.project_settings',
 )
@@ -189,7 +191,7 @@ IKWEN_REGISTER_EVENTS = (
 
 LOGIN_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-LOGIN_REDIRECT_URL = 'phone_confirmation'
+LOGIN_REDIRECT_URL = 'home'
 
 STAFF_ROUTER = (
     ('sales.ik_view_dashboard', 'dashboard'),
@@ -236,3 +238,4 @@ MOMO_BEFORE_CASH_OUT = 'ikwen_shavida.sales.views.set_momo_order_checkout'
 MOMO_AFTER_CASH_OUT = 'ikwen_shavida.sales.views.confirm_payment'
 JUMBOPAY_API_URL = 'https://154.70.100.194/api/sandbox/v2/' if DEBUG else 'https://154.70.100.194/api/live/v2/'
 MTN_MOMO_API_URL = 'https://developer.mtn.cm/OnlineMomoWeb/faces/transaction/transactionRequest.xhtml'
+ORANGE_MONEY_API_URL = 'https://api.orange.com/orange-money-webpay/cm/v1'

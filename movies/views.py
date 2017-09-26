@@ -19,7 +19,8 @@ from ikwen_shavida.movies.models import *
 from ikwen_shavida.movies.utils import get_all_recommended, EXCLUDE_LIST_KEYS_KEY, get_recommended_for_category, \
     get_movies_series_share, is_in_temp_prepayment, render_suggest_payment_template, extract_resource_url
 from ikwen_shavida.reporting.models import StreamLogEntry
-from ikwen_shavida.sales.models import RetailBundle, VODBundle, VODPrepayment
+from ikwen_shavida.sales.models import RetailBundle, VODBundle, VODPrepayment, Prepayment, UnitPrepayment, \
+    RetailPrepayment
 from ikwen_shavida.shavida.views import BaseView
 
 
@@ -172,6 +173,13 @@ class Bundles(CustomerView):
             context['bundles'] = bundles
         context['is_bundle_page'] = True
         return context
+
+    def get(self, request, *args, **kwargs):
+        # Wipe Prepayment resulting from an incomplete checkout operation
+        VODPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+        UnitPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+        RetailPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+        return super(Bundles, self).get(request, *args, **kwargs)
 
     def render_to_response(self, context, **response_kwargs):
         if is_touch_device(self.request):

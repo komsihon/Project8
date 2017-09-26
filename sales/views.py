@@ -2,7 +2,9 @@
 import json
 from datetime import datetime, timedelta
 
+from currencies.models import Currency
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,8 +16,10 @@ from django.template.loader import get_template
 from django.utils.translation import gettext as _
 from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
-from ikwen.billing.models import PaymentMean
-from ikwen.conf.settings import MOMO_SLUG, FALLBACK_SHARE_RATE
+from ikwen.billing.models import MoMoTransaction
+from ikwen.billing.mtnmomo.views import MTN_MOMO
+from ikwen.billing.orangemoney.views import ORANGE_MONEY
+from ikwen.conf.settings import FALLBACK_SHARE_RATE
 from ikwen.core.models import Service
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
     add_event, calculate_watch_info, rank_watch_objects
@@ -32,86 +36,115 @@ from ikwen_shavida.shavida.models import Customer
 from math import ceil
 
 
-def set_momo_order_checkout(request, *args, **kwargs):
+def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
     """
     This function has no URL associated with it.
     It serves as ikwen setting "MOMO_BEFORE_CHECKOUT"
     """
-    if not getattr(settings, 'DEBUG', True):
-        try:
-            json.loads(PaymentMean.objects.get(slug=MOMO_SLUG).credentials)
-        except:
-            return HttpResponse("Error, Could not parse Jumbo Pay parameters.")
-    else:
-        json.loads(PaymentMean.objects.get(slug=MOMO_SLUG).credentials)
-
+    service = get_service_instance()
+    member = request.user
+    signature = request.session['signature']
     bundle_id = request.POST.get('bundle_id')
     media_id = request.POST.get('media_id')
     media_type = request.POST.get('media_type')
+    currency = Currency.active.base()
     if bundle_id:
         if getattr(settings, 'IS_VOD_OPERATOR', False):
-            request.session['model_name'] = 'sales.VODBundle'
+            request.session['model_name'] = 'sales.VODPrepayment'
             bundle = get_object_or_404(VODBundle, pk=bundle_id)
+            prepayment = VODPrepayment.objects.create(member=member, amount=bundle.cost, duration=bundle.duration,
+                                                      adult_authorized=bundle.adult_authorized, currency=currency,
+                                                      payment_mean=payment_mean)
         else:
-            request.session['model_name'] = 'sales.RetailBundle'
+            request.session['model_name'] = 'sales.RetailPrepayment'
             bundle = get_object_or_404(RetailBundle, pk=bundle_id)
+            prepayment = RetailPrepayment.objects.create(member=member, amount=bundle.cost, balance=bundle.quantity,
+                                                         duration=bundle.duration, adult_authorized=bundle.adult_authorized,
+                                                         currency=currency, payment_mean=payment_mean)
         request.session['amount'] = bundle.cost
-        request.session['object_id'] = request.POST['bundle_id']
     else:
         if media_type == 'movie':
-            request.session['amount'] = get_object_or_404(Movie, pk=media_id).view_price
-            request.session['model_name'] = 'movies.Movie'
+            media = get_object_or_404(Movie, pk=media_id)
             request.session['media_type'] = 'movie'
         else:
-            request.session['amount'] = get_object_or_404(Series, pk=media_id).view_price
-            request.session['model_name'] = 'movies.Series'
+            media = get_object_or_404(Series, pk=media_id)
             request.session['media_type'] = 'series'
-        request.session['object_id'] = request.POST['media_id']
+        config = service.config
+        duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
+        prepayment = UnitPrepayment.objects.create(media_type=media_type, media_id=media_id,  member=member,
+                                                   amount=media.view_price, duration=duration, currency=currency,
+                                                   payment_mean=payment_mean)
+        request.session['amount'] = media.view_price
+        request.session['model_name'] = 'sales.UnitPrepayment'
         request.session['is_unit_prepayment'] = True
-    request.session['is_momo_payment'] = True
+    request.session['object_id'] = prepayment.id
+
+    mean = request.GET.get('mean', MTN_MOMO)
+    if mean is None or mean == MTN_MOMO:
+        request.session['is_momo_payment'] = True
+    elif mean == ORANGE_MONEY:
+        request.session['notif_url'] = service.url + reverse('movies:home')  # Unused. Callback is run by querying transation status
+        request.session['return_url'] = service.url + reverse('movies:home')
+        request.session['cancel_url'] = service.url + reverse('movies:bundles')
+        request.session['is_momo_payment'] = False
 
 
 def confirm_payment(request, *args, **kwargs):
+    if request.session.get('is_momo_payment'):
+        signature = kwargs.get('signature')
+        no_check_signature = request.GET.get('ncs')
+        if getattr(settings, 'DEBUG', False):
+            if not no_check_signature:
+                if signature != request.session['signature']:
+                    return HttpResponse('Invalid transaction signature')
+        else:
+            if signature != request.session['signature']:
+                return HttpResponse('Invalid transaction signature')
+    else:
+        try:
+            data = json.loads(request.body)
+            tx_id = data['txnid']
+            momo_tx_id = kwargs['momo_tx_id']
+            MoMoTransaction.objects.using('wallets').filter(pk=momo_tx_id).update(tx_id=tx_id)
+        except:
+            pass
+
     is_unit_prepayment = request.session.get('is_unit_prepayment')
 
     if is_unit_prepayment:
-        return choose_temp_bundle(request, payment_successful=True)
+        pay_cash, next_url = choose_temp_bundle(request, payment_successful=True, **kwargs)
     elif getattr(settings, 'IS_VOD_OPERATOR', False):
-        return choose_vod_bundle(request, payment_successful=True)
+        pay_cash, next_url = choose_vod_bundle(request, payment_successful=True, **kwargs)
     else:
-        return choose_retail_bundle(request, payment_successful=True)
+        pay_cash = False
+        next_url = choose_retail_bundle(request, payment_successful=True, **kwargs)
+
+    if not pay_cash and request.session.get('is_momo_payment'):
+        return {'success': True, 'next_url': next_url}
+    else:
+        return HttpResponseRedirect(next_url)
 
 
 @login_required
 def choose_vod_bundle(request, *args, **kwargs):
     config = get_service_instance().config
     member = request.user
-    bundle_id = request.POST.get('bundle_id', request.session.get('object_id'))
+
     pay_cash = False
     if config.allow_cash_payment:
         pay_cash = request.POST.get('pay_cash') == 'yes'
-    bundle = VODBundle.objects.get(pk=bundle_id)
-    status = request.POST.get('status', Prepayment.PENDING)
-    last_vod_prepayment = member.customer.get_last_vod_prepayment()
-    if last_vod_prepayment:
-        try:
-            welcome_offer = VODPrepayment.objects.get(member=member, paid_on__isnull=True, status=Prepayment.CONFIRMED)
-            if last_vod_prepayment.status == Prepayment.PENDING and last_vod_prepayment != welcome_offer:
-                last_vod_prepayment.delete()  # This VODPrepayment was never paid so wipe it out
-                balance = bundle.volume + welcome_offer.balance
-            else:
-                balance = last_vod_prepayment.balance + bundle.volume
-        except VODPrepayment.DoesNotExist:
-            if last_vod_prepayment.status == Prepayment.PENDING:
-                balance= 0
-                last_vod_prepayment.delete()  # This VODPrepayment was never paid so wipe it out
-            else:
-                balance = last_vod_prepayment.balance + bundle.volume
+    bundle_id = request.POST.get('bundle_id')
+    if bundle_id:
+        bundle = VODBundle.objects.get(pk=bundle_id)
+        status = request.POST.get('status', Prepayment.PENDING)
+        prepayment = VODPrepayment(member=member, amount=bundle.cost, duration=bundle.duration,
+                                   adult_authorized=bundle.adult_authorized, status=status)
     else:
-        balance = bundle.volume
-    prepayment = VODPrepayment.objects.create(member=member, amount=bundle.cost, duration=bundle.duration,
-                                              balance=balance, adult_authorized=bundle.adult_authorized, status=status)
-    if getattr(settings, 'PAY_AUTOMATICALLY', False) or kwargs.get('payment_successful', False):
+        object_id = request.session.get('object_id')
+        if not object_id:
+            object_id = kwargs['object_id']
+        prepayment = VODPrepayment.objects.get(pk=object_id)
+    if kwargs.get('payment_successful', False):
         prepayment.status = Prepayment.CONFIRMED
         prepayment.paid_on = datetime.now()
         prepayment.save()
@@ -119,15 +152,13 @@ def choose_vod_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, bundle.cost)
+        share_payment_and_set_stats(member.customer, prepayment.amount)
     elif pay_cash:
         prepayment.save()
 
-    next_url = reverse('movies:home') + "?bundleChosen=yes"
-    if not pay_cash and request.session.get('is_momo_payment'):
-        return {'success': True, 'next_url': next_url}
-    else:
-        return HttpResponseRedirect(next_url)
+    messages.success(request, _("Your bundle was successfully activated."))
+    next_url = reverse('movies:home')
+    return pay_cash, next_url
 
 
 @login_required
@@ -135,24 +166,30 @@ def choose_retail_bundle(request, *args, **kwargs):
     member = request.user
     # if not member.profile.is_vod_operator:
     #     return HttpResponseForbidden("You are not allowed to order retail bundle.")
-    bundle_id = request.POST.get('bundle_id', request.session.get('object_id'))
-    bundle = RetailBundle.objects.get(pk=bundle_id)
-    status = request.POST.get('status', Prepayment.PENDING)
-    if kwargs.get('payment_successful', False):
-        status = Prepayment.CONFIRMED
-        share_payment_and_set_stats(member.customer, bundle.cost)
+    bundle_id = request.POST.get('bundle_id')
+    if bundle_id:
+        bundle = RetailBundle.objects.get(pk=bundle_id)
+        status = request.POST.get('status', Prepayment.PENDING)
+        purchased_quantity = bundle.quantity
+        prepayment = RetailPrepayment(member=member, amount=bundle.cost, duration=bundle.duration,
+                                      adult_authorized=bundle.adult_authorized, status=status)
+    else:
+        object_id = request.session.get('object_id')
+        if not object_id:
+            object_id = kwargs['object_id']
+        prepayment = RetailPrepayment.objects.get(pk=object_id)
+        purchased_quantity = prepayment.balance
     last_retail_prepayment = member.customer.get_last_retail_prepayment()
     if last_retail_prepayment:
         if last_retail_prepayment.days_left > 0:
-            balance = last_retail_prepayment.balance + bundle.quantity
+            balance = last_retail_prepayment.balance + purchased_quantity
         else:
-            balance = bundle.quantity
+            balance = purchased_quantity
     else:
-        balance = bundle.quantity
-    prepayment = RetailPrepayment.objects.create(member=member, amount=bundle.cost, duration=bundle.duration,
-                                    balance=balance, adult_authorized=bundle.adult_authorized, status=status)
+        balance = purchased_quantity
 
-    if getattr(settings, 'PAY_AUTOMATICALLY', False) or kwargs.get('payment_successful', False):
+    if kwargs.get('payment_successful', False):
+        prepayment.balance = balance
         prepayment.status = Prepayment.CONFIRMED
         prepayment.paid_on = datetime.now()
         prepayment.save()
@@ -160,52 +197,64 @@ def choose_retail_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-    next_url = reverse('movies:home') + "?bundleChosen=yes"
-    if request.session.get('is_momo_payment'):
-        return {'success': True, 'next_url': next_url}
-    else:
-        return HttpResponseRedirect(next_url)
+        share_payment_and_set_stats(member.customer, prepayment.amount)
+
+    messages.success(request, _("Your bundle was successfully activated."))
+    next_url = reverse('movies:home')
+    return next_url
 
 
 @login_required
 def choose_temp_bundle(request, *args, **kwargs):
     config = get_service_instance().config
     member = request.user
-    media_type = request.POST.get('media_type', request.session.get('media_type'))
-    media_id = request.POST.get('media_id', request.session.get('object_id'))
+    media_id = request.POST.get('media_id')
+    if media_id:
+        try:
+            media = Movie.objects.get(pk=media_id)
+            amount = media.view_price
+            media_type = 'movie'
+            hashbang = 'movie-' + media.slug
+        except Movie.DoesNotExist:
+            media = get_object_or_404(Series, pk=media_id)
+            amount = media.view_price
+            media_type = 'series'
+            hashbang = 'series-' + media.slug
+        duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
+        prepayment = UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
+                                                   amount=amount, duration=duration)
+    else:
+        object_id = request.session.get('object_id')
+        if not object_id:
+            object_id = kwargs['object_id']
+        prepayment = UnitPrepayment.objects.get(pk=object_id)
+        try:
+            media = Movie.objects.get(pk=prepayment.media_id)
+            hashbang = 'movie-' + media.slug
+        except Movie.DoesNotExist:
+            media = Series.objects.get(pk=prepayment.media_id)
+            hashbang = 'series-' + media.slug
     pay_cash = False
     if config.allow_cash_payment:
         pay_cash = request.POST.get('pay_cash') == 'yes'
-    if media_type == 'movie':
-        amount = get_object_or_404(Movie, pk=media_id).view_price
-    else:
-        amount = get_object_or_404(Series, pk=media_id).view_price
-    status = request.GET.get('status', Prepayment.PENDING)
-    if kwargs.get('payment_successful', False):
-        status = Prepayment.CONFIRMED
-        share_payment_and_set_stats(member.customer, amount)
-    config = get_service_instance().config
-    duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
     now = datetime.now()
-    expiry = now + timedelta(days=duration)
-    unit_prepayment = UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
-                                                    amount=amount, duration=duration, status=status)
-    if getattr(settings, 'PAY_AUTOMATICALLY', False) or kwargs.get('payment_successful', False):
-        unit_prepayment.paid_on = now
-        unit_prepayment.expiry = expiry
-        unit_prepayment.save()
+    expiry = now + timedelta(days=prepayment.duration)
+    if kwargs.get('payment_successful', False):
+        prepayment.paid_on = now
+        prepayment.expiry = expiry
+        prepayment.status = Prepayment.CONFIRMED
+        prepayment.save()
         service = get_service_instance()
         sudo_group = Group.objects.get(name=SUDO)
-        add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=unit_prepayment.id)
-        add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=unit_prepayment.id)
+        add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
+        add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
+        share_payment_and_set_stats(member.customer, prepayment.amount)
     elif pay_cash:
-        unit_prepayment.save()
+        prepayment.save()
 
-    next_url = reverse('movies:home') + "?bundleChosen=yes"
-    if not pay_cash and request.session.get('is_momo_payment'):
-        return {'success': True, 'next_url': next_url}
-    else:
-        return HttpResponseRedirect(next_url)
+    messages.success(request, _("Your bundle was successfully activated."))
+    next_url = reverse('movies:home') + '#!' + hashbang
+    return pay_cash, next_url
 
 
 def share_payment_and_set_stats(customer, amount):
@@ -221,7 +270,7 @@ def share_payment_and_set_stats(customer, amount):
     ikwen_earnings = ikwen_earnings_rate + ikwen_earnings_fixed
     operator_earnings = amount - ikwen_earnings
 
-    profile_umbrella.raise_balance(operator_earnings)
+    service.raise_balance(operator_earnings)
 
     partner = service_umbrella.retailer
     if partner:
@@ -229,10 +278,7 @@ def share_payment_and_set_stats(customer, amount):
         partner_earnings = ikwen_earnings * (100 - retail_config.ikwen_tx_share_rate) / 100
         ikwen_earnings -= partner_earnings
 
-        add_database_to_settings(partner.database)
-        partner_profile_original = PartnerProfile.objects.using(partner.database).get(service=partner)
-
-        partner_profile_original.raise_balance(partner_earnings)
+        partner.raise_balance(partner_earnings)
 
         service_partner = Service.objects.using(partner.database).get(pk=service_umbrella.id)
         app_partner = service_partner.app
@@ -445,13 +491,13 @@ class Dashboard(DashboardBase):
 
     def get_context_data(self, **kwargs):
         context = super(Dashboard, self).get_context_data(**kwargs)
-        service = get_service_instance()
-        set_counters(service)
         earnings_today = context['earnings_report']['today']
         earnings_yesterday = context['earnings_report']['yesterday']
         earnings_last_week = context['earnings_report']['last_week']
         earnings_last_28_days = context['earnings_report']['last_28_days']
 
+        service = get_service_instance()
+        set_counters(service)
         orders_count_today = calculate_watch_info(service.custom_service_count_history)
         orders_count_yesterday = calculate_watch_info(service.custom_service_count_history, 1)
         orders_count_last_week = calculate_watch_info(service.custom_service_count_history, 7)

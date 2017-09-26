@@ -8,6 +8,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 from djangotoolbox.fields import ListField, EmbeddedModelField
 from ikwen.accesscontrol.models import Member
+from ikwen.billing.models import PaymentMean
 from ikwen.core.models import Model
 from ikwen.core.utils import to_dict
 from ikwen_shavida.conf.utils import is_vod_operator
@@ -91,6 +92,8 @@ class Prepayment(Model):
     member = models.ForeignKey(Member)
     amount = models.PositiveIntegerField()
     paid_on = models.DateTimeField(blank=True, null=True)
+    currency = EmbeddedModelField('currencies.Currency', blank=True, null=True, editable=False)  # Currency used when placing this Order
+    payment_mean = models.ForeignKey(PaymentMean, null=True, editable=False)
     duration = models.PositiveSmallIntegerField(default=30,
                                                 help_text=_("Number of days for this to expire."))
     status = models.CharField(choices=STATUS_CHOICES, max_length=15, default=PENDING)
@@ -133,7 +136,8 @@ class RetailPrepayment(Prepayment):
 
 
 class VODPrepayment(Prepayment):
-    balance = models.PositiveIntegerField(help_text=_("The number of bytes of streaming remaining to the client. "
+    balance = models.PositiveIntegerField(default=1000,
+                                          help_text=_("The number of bytes of streaming remaining to the client. "
                                                       "(1 GigaBytes = 1,000,000,000 Bytes)"))
     adult_authorized = models.BooleanField(default=False,
                                            help_text=_("Check if you want customer to access adult content."))
@@ -253,7 +257,7 @@ class UnitPrepayment(Prepayment):
         verbose_name_plural = "Single Item Payments"
 
     def get_media(self):
-        from movies.models import Movie, Series
+        from ikwen_shavida.movies.models import Movie, Series
         try:
             if self.media_type == 'movie':
                 return Movie.objects.get(pk=self.media_id).title

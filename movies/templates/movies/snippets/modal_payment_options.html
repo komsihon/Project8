@@ -18,7 +18,8 @@
                                 <img src="{% static 'shavida/img/logo_mtn_mobile_money.jpg' %}" height="90"/>
                             </a>
                         </li>
-                        <li class="col-sm-4 payment-method om" disabled>
+                        <li class="col-sm-4 payment-method om" disabled
+                            data-action-url="{% url om.action_url_name %}">
                             <a style="background: #15171e; opacity: .3" title="{% trans "Pay with Orange Money" %}">
                                 <img src="{% static 'shavida/img/logo-OM-200x166.png' %}" height="90" />
                             </a>

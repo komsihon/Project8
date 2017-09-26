@@ -1,5 +1,9 @@
+from django.conf import settings
+
 
 def kick_my_other_sessions(sender, request=None, user=None, **kwargs):
+    if getattr(settings, 'DEBUG', False):
+        return
     from tracking.models import Visitor
     from django.contrib.sessions.models import Session
     keys = []
