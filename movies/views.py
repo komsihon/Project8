@@ -12,9 +12,6 @@ from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import slugify
 from django.utils.module_loading import import_by_path
 from django.utils.translation import gettext as _
-from ikwen.billing.models import PaymentMean
-from ikwen.conf.settings import MOMO_SLUG
-from ikwen.core.utils import get_service_instance
 from ikwen_shavida.movies.models import *
 from ikwen_shavida.movies.utils import get_all_recommended, EXCLUDE_LIST_KEYS_KEY, get_recommended_for_category, \
     get_movies_series_share, is_in_temp_prepayment, render_suggest_payment_template, extract_resource_url
@@ -176,9 +173,10 @@ class Bundles(CustomerView):
 
     def get(self, request, *args, **kwargs):
         # Wipe Prepayment resulting from an incomplete checkout operation
-        VODPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
-        UnitPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
-        RetailPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+        if request.user.is_authenticated():
+            VODPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+            UnitPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
+            RetailPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
         return super(Bundles, self).get(request, *args, **kwargs)
 
     def render_to_response(self, context, **response_kwargs):
