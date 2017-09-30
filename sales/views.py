@@ -43,7 +43,6 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
     """
     service = get_service_instance()
     member = request.user
-    signature = request.session['signature']
     bundle_id = request.POST.get('bundle_id')
     media_id = request.POST.get('media_id')
     media_type = request.POST.get('media_type')
@@ -83,9 +82,17 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
     if mean is None or mean == MTN_MOMO:
         request.session['is_momo_payment'] = True
     elif mean == ORANGE_MONEY:
-        request.session['notif_url'] = service.url + reverse('movies:home')  # Unused. Callback is run by querying transation status
-        request.session['return_url'] = service.url + reverse('movies:home')
-        request.session['cancel_url'] = service.url + reverse('movies:bundles')
+        if service.domain == 'xmboa.com':
+            notif_url = 'http://ikwen.com/console/'
+            return_url = 'http://ikwen.com/console/'
+            cancel_url = 'http://ikwen.com/console/'
+        else:
+            notif_url = service.url + reverse('movies:home')
+            return_url = service.url + reverse('movies:home')
+            cancel_url = service.url + reverse('movies:bundles')
+        request.session['notif_url'] = notif_url  # Unused. Callback is run by querying transation status
+        request.session['return_url'] = return_url
+        request.session['cancel_url'] = cancel_url
         request.session['is_momo_payment'] = False
 
 
@@ -152,7 +159,7 @@ def choose_vod_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount)
+        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
     elif pay_cash:
         prepayment.save()
 
@@ -197,7 +204,7 @@ def choose_retail_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount)
+        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
 
     messages.success(request, _("Your bundle was successfully activated."))
     next_url = reverse('movies:home')
@@ -248,7 +255,7 @@ def choose_temp_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount)
+        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
     elif pay_cash:
         prepayment.save()
 
@@ -257,7 +264,7 @@ def choose_temp_bundle(request, *args, **kwargs):
     return pay_cash, next_url
 
 
-def share_payment_and_set_stats(customer, amount):
+def share_payment_and_set_stats(customer, amount, payment_mean):
     service = get_service_instance()
     service_umbrella = get_service_instance(UMBRELLA)
     app_umbrella = service_umbrella.app
@@ -270,7 +277,7 @@ def share_payment_and_set_stats(customer, amount):
     ikwen_earnings = ikwen_earnings_rate + ikwen_earnings_fixed
     operator_earnings = amount - ikwen_earnings
 
-    service.raise_balance(operator_earnings)
+    service.raise_balance(operator_earnings, payment_mean.slug)
 
     partner = service_umbrella.retailer
     if partner:
@@ -278,7 +285,7 @@ def share_payment_and_set_stats(customer, amount):
         partner_earnings = ikwen_earnings * (100 - retail_config.ikwen_tx_share_rate) / 100
         ikwen_earnings -= partner_earnings
 
-        partner.raise_balance(partner_earnings)
+        partner.raise_balance(partner_earnings, payment_mean.slug)
 
         service_partner = Service.objects.using(partner.database).get(pk=service_umbrella.id)
         app_partner = service_partner.app
