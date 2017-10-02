@@ -97,24 +97,15 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
 
 
 def confirm_payment(request, *args, **kwargs):
-    if request.session.get('is_momo_payment'):
-        signature = kwargs.get('signature')
-        no_check_signature = request.GET.get('ncs')
-        if getattr(settings, 'DEBUG', False):
-            if not no_check_signature:
-                if signature != request.session['signature']:
-                    return HttpResponse('Invalid transaction signature')
-        else:
+    signature = kwargs.get('signature')
+    no_check_signature = request.GET.get('ncs')
+    if getattr(settings, 'DEBUG', False):
+        if not no_check_signature:
             if signature != request.session['signature']:
                 return HttpResponse('Invalid transaction signature')
     else:
-        try:
-            data = json.loads(request.body)
-            tx_id = data['txnid']
-            momo_tx_id = kwargs['momo_tx_id']
-            MoMoTransaction.objects.using('wallets').filter(pk=momo_tx_id).update(tx_id=tx_id)
-        except:
-            pass
+        if signature != request.session['signature']:
+            return HttpResponse('Invalid transaction signature')
 
     is_unit_prepayment = request.session.get('is_unit_prepayment')
 
