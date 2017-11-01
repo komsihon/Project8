@@ -1,0 +1,26 @@
+{% load i18n static %}
+<div id="modal-guard-image" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content modal-info">
+            <div class="modal-body">
+                <img src="{% get_media_prefix %}{{ config.guard_image_landscape.name }}" class="guard-img-landscape img-responsive">
+                <img src="{% get_media_prefix %}{{ config.guard_image_portrait.name }}" class="guard-img-portrait img-responsive">
+                <p class="warning text-has-shade" style="color: #fff">
+                    {% blocktrans %}By clicking continue, you agree that
+                        you have read and accepted our <a href="{{ settings.AGREEMENT_URL }}">terms</a>{% endblocktrans %}
+                </p>
+                <div class="actions">
+                    <div class="col-xs-12 col-sm-4 col-md-3 pull-right">
+                        <button class="btn btn-sm btn-danger btn-block cta continue"
+                                data-dismiss="modal" aria-label="Close">{% trans "Continue" %}</button>
+                    </div>
+                    <div class="col-xs-12 col-sm-4 col-md-3 pull-right quit">
+                        <button class="btn btn-sm btn-default btn-block"
+                                data-dismiss="modal" aria-label="Close">{% trans "Quit" %}</button>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

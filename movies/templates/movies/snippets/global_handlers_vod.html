@@ -7,11 +7,11 @@
         {% if user.is_authenticated %}
             ikwen.availableQuota = parseInt("{{ available_quota }}");
             ikwen.canAccessAdultContent = "{{ user.can_access_adult_content }}".toLocaleLowerCase();
-            {% if not last_vod_prepayment or last_vod_prepayment.days_left < 0 %}
-                {% if not is_bundle_page %}
-                    $('#suggest-payment').modal('show');
-                {% endif %}
-            {% endif %}
+{#            {% if not last_vod_prepayment or last_vod_prepayment.days_left < 0 %}#}
+{#                {% if not is_bundle_page %}#}
+{#                    $('#suggest-payment').modal('show');#}
+{#                {% endif %}#}
+{#            {% endif %}#}
         {% endif %}
 
         var itemsCount = localStorage.getItem('itemsCount');
@@ -108,9 +108,5 @@
                 }
             })
         });
-        {% if request.GET.bundleChosen %}
-            $('div#top-notice-ctnr span').html("{% trans "Your bundle was chosen." %}");
-            $('div#top-notice-ctnr').fadeIn('slow').delay(10000).fadeOut();
-        {% endif %}
 })()
 </script>

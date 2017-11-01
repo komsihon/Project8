@@ -208,7 +208,7 @@ class History(CustomerView):
     def get_context_data(self, **kwargs):
         context = super(History, self).get_context_data(**kwargs)
         watched = []
-        for entry in HistoryEntry.objects.all().order_by('-id')[:10]:
+        for entry in HistoryEntry.objects.filter(member=self.request.user).order_by('-id')[:10]:
             try:
                 media = Movie.objects.get(pk=entry.media_id)
             except Movie.DoesNotExist:

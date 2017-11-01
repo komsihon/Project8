@@ -191,6 +191,13 @@ form#search .spinner {
 #category-list li.active a, #category-list li a:hover {background: #111}
 #menu-xs {border-bottom: 1px solid #7d5e00; margin-bottom: 1em; padding-bottom: .3em;}
 #menu-xs h3, #menu-xs li a {color: #FFC107}
+.guard-img-landscape {display: block;margin: 0 auto 10px;}
+.guard-img-portrait {display: none}
+
+@media (orientation: portrait) {
+    .guard-img-landscape {display: none}
+    .guard-img-portrait {display: block;margin: 0 auto 10px;}
+}
 
 #content.container {padding: 50px 0 0;}
 
@@ -727,3 +734,7 @@ form#auto-selection input + span {margin: 6px 0 0 9px;float: left;}
 }
 
 .summary-media-poster {background: no-repeat center; background-size: cover; float: left; height: 45px;width: 45px}
+#modal-guard-image .modal-content {background: none;box-shadow: none;border: none;}
+#modal-guard-image .warning {color: #fff}
+#modal-guard-image .warning a {color: #fff; text-decoration: underline}
+.turn-down {color: #D62626; font-size: 24px; margin: 25% auto; text-align: center}

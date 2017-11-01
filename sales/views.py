@@ -16,7 +16,6 @@ from django.template.loader import get_template
 from django.utils.translation import gettext as _
 from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
-from ikwen.billing.models import MoMoTransaction
 from ikwen.billing.mtnmomo.views import MTN_MOMO
 from ikwen.billing.orangemoney.views import ORANGE_MONEY
 from ikwen.conf.settings import FALLBACK_SHARE_RATE
@@ -24,7 +23,7 @@ from ikwen.core.models import Service
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
     add_event, calculate_watch_info, rank_watch_objects
 from ikwen.core.views import DashboardBase
-from ikwen.partnership.models import ApplicationRetailConfig, PartnerProfile
+from ikwen.partnership.models import ApplicationRetailConfig
 from ikwen_shavida.movies.models import Movie, Series
 from ikwen_shavida.movies.views import CustomerView
 from ikwen_shavida.reporting.utils import generate_add_list_info, add_media_to_update, sync_changes
@@ -131,18 +130,18 @@ def choose_vod_bundle(request, *args, **kwargs):
     pay_cash = False
     if config.allow_cash_payment:
         pay_cash = request.POST.get('pay_cash') == 'yes'
-    bundle_id = request.POST.get('bundle_id')
-    if bundle_id:
+    if pay_cash:
+        bundle_id = request.POST.get('bundle_id')
         bundle = VODBundle.objects.get(pk=bundle_id)
         status = request.POST.get('status', Prepayment.PENDING)
         prepayment = VODPrepayment(member=member, amount=bundle.cost, duration=bundle.duration,
                                    adult_authorized=bundle.adult_authorized, status=status)
-    else:
+        prepayment.save()
+    elif kwargs.get('payment_successful', False):
         object_id = request.session.get('object_id')
         if not object_id:
             object_id = kwargs['object_id']
         prepayment = VODPrepayment.objects.get(pk=object_id)
-    if kwargs.get('payment_successful', False):
         prepayment.status = Prepayment.CONFIRMED
         prepayment.paid_on = datetime.now()
         prepayment.save()
@@ -151,8 +150,6 @@ def choose_vod_bundle(request, *args, **kwargs):
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
         share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
-    elif pay_cash:
-        prepayment.save()
 
     messages.success(request, _("Your bundle was successfully activated."))
     next_url = reverse('movies:home')
@@ -164,19 +161,19 @@ def choose_retail_bundle(request, *args, **kwargs):
     member = request.user
     # if not member.profile.is_vod_operator:
     #     return HttpResponseForbidden("You are not allowed to order retail bundle.")
-    bundle_id = request.POST.get('bundle_id')
-    if bundle_id:
-        bundle = RetailBundle.objects.get(pk=bundle_id)
-        status = request.POST.get('status', Prepayment.PENDING)
-        purchased_quantity = bundle.quantity
-        prepayment = RetailPrepayment(member=member, amount=bundle.cost, duration=bundle.duration,
-                                      adult_authorized=bundle.adult_authorized, status=status)
-    else:
-        object_id = request.session.get('object_id')
-        if not object_id:
-            object_id = kwargs['object_id']
-        prepayment = RetailPrepayment.objects.get(pk=object_id)
-        purchased_quantity = prepayment.balance
+    # bundle_id = request.POST.get('bundle_id')
+    # if bundle_id:
+    #     bundle = RetailBundle.objects.get(pk=bundle_id)
+    #     status = request.POST.get('status', Prepayment.PENDING)
+    #     purchased_quantity = bundle.quantity
+    #     prepayment = RetailPrepayment(member=member, amount=bundle.cost, duration=bundle.duration,
+    #                                   adult_authorized=bundle.adult_authorized, status=status)
+    # else:
+    object_id = request.session.get('object_id')
+    if not object_id:
+        object_id = kwargs['object_id']
+    prepayment = RetailPrepayment.objects.get(pk=object_id)
+    purchased_quantity = prepayment.balance
     last_retail_prepayment = member.customer.get_last_retail_prepayment()
     if last_retail_prepayment:
         if last_retail_prepayment.days_left > 0:
@@ -206,8 +203,12 @@ def choose_retail_bundle(request, *args, **kwargs):
 def choose_temp_bundle(request, *args, **kwargs):
     config = get_service_instance().config
     member = request.user
-    media_id = request.POST.get('media_id')
-    if media_id:
+    pay_cash = False
+    if config.allow_cash_payment:
+        pay_cash = request.POST.get('pay_cash') == 'yes'
+
+    if pay_cash:
+        media_id = request.POST.get('media_id')
         try:
             media = Movie.objects.get(pk=media_id)
             amount = media.view_price
@@ -219,9 +220,9 @@ def choose_temp_bundle(request, *args, **kwargs):
             media_type = 'series'
             hashbang = 'series-' + media.slug
         duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
-        prepayment = UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
-                                                   amount=amount, duration=duration)
-    else:
+        UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
+                                      amount=amount, duration=duration)
+    elif kwargs.get('payment_successful', False):
         object_id = request.session.get('object_id')
         if not object_id:
             object_id = kwargs['object_id']
@@ -232,12 +233,8 @@ def choose_temp_bundle(request, *args, **kwargs):
         except Movie.DoesNotExist:
             media = Series.objects.get(pk=prepayment.media_id)
             hashbang = 'series-' + media.slug
-    pay_cash = False
-    if config.allow_cash_payment:
-        pay_cash = request.POST.get('pay_cash') == 'yes'
-    now = datetime.now()
-    expiry = now + timedelta(days=prepayment.duration)
-    if kwargs.get('payment_successful', False):
+        now = datetime.now()
+        expiry = now + timedelta(days=prepayment.duration)
         prepayment.paid_on = now
         prepayment.expiry = expiry
         prepayment.status = Prepayment.CONFIRMED
@@ -247,8 +244,6 @@ def choose_temp_bundle(request, *args, **kwargs):
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
         share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
-    elif pay_cash:
-        prepayment.save()
 
     messages.success(request, _("Your bundle was successfully activated."))
     next_url = reverse('movies:home') + '#!' + hashbang
@@ -372,8 +367,8 @@ def confirm_order(request, *args, **kwargs):
     add_event(service, NEW_ORDER, group_id=sudo_group.id, object_id=update.id)
     add_event(service, NEW_ORDER, member=member, object_id=update.id)
 
-    set_counters(service)  # We use custom_service_count_history to count orders
-    increment_history_field(service, 'custom_service_count_history')
+    set_counters(service)  # We use transaction_count_history to count orders
+    increment_history_field(service, 'transaction_count_history')
 
     if member.customer.is_operator:
         db = member.customer.service.database
@@ -496,10 +491,10 @@ class Dashboard(DashboardBase):
 
         service = get_service_instance()
         set_counters(service)
-        orders_count_today = calculate_watch_info(service.custom_service_count_history)
-        orders_count_yesterday = calculate_watch_info(service.custom_service_count_history, 1)
-        orders_count_last_week = calculate_watch_info(service.custom_service_count_history, 7)
-        orders_count_last_28_days = calculate_watch_info(service.custom_service_count_history, 28)
+        orders_count_today = calculate_watch_info(service.transaction_count_history)
+        orders_count_yesterday = calculate_watch_info(service.transaction_count_history, 1)
+        orders_count_last_week = calculate_watch_info(service.transaction_count_history, 7)
+        orders_count_last_28_days = calculate_watch_info(service.transaction_count_history, 28)
 
         # AEPO stands for Average Earning Per Order
         aepo_today = earnings_today['total'] / orders_count_today['total'] if orders_count_today['total'] else 0

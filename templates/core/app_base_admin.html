@@ -1,7 +1,8 @@
 {% extends "core/base_admin.html" %}
-{% load i18n auth_tokens %}
+{% load i18n cache auth_tokens %}
 
 {% block admin_nav %}
+    {% cache 600 sidebar user.username %}
     <div id="admin-nav" class="edge-panel-left">
         <div class="wrapper">
             <div class="stage">
@@ -25,7 +26,7 @@
                             </li>
                             <li role="presentation" class="theming">
                                 <a href="{% url 'theming:theme_list' %}">
-                                    {% trans "Theming" %} <span class="label label-danger">New</span>
+                                    {% trans "Theming" %}
                                 </a>
                             </li>
                             <li role="presentation" class="community">
@@ -83,4 +84,5 @@
             </div>
         </div>
     </div>
+    {% endcache %}
 {% endblock %}

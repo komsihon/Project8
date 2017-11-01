@@ -163,15 +163,22 @@ STATIC_URL = '/static/'
 
 TEMPLATE_DIRS = (os.path.join(BASE_DIR,  'templates'),)
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': 60,
-        'KEY_PREFIX': 'svdlocal',  # Use rather svdprod for Production
-        'VERSION': '1'
+if LOCAL_DEV:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache'
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+            'LOCATION': '127.0.0.1:11211',
+            'TIMEOUT': 60,
+            'KEY_PREFIX': 'svdlocal',  # Use rather svdprod for Production
+            'VERSION': '1'
+        }
+    }
 
 IKWEN_SERVICE_ID = '56ad2bd9b37b335a18fe5861'
 

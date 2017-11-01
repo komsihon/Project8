@@ -122,6 +122,12 @@ class OperatorProfile(AbstractConfig):
                                           help_text=_("Fixed amount ikwen collects on the turnover made by this person."))
     max_products = models.FloatField(default=0,
                                      help_text=_("Maximum number of media in the library."))
+    guard_image_landscape = models.ImageField(upload_to='guard_images', blank=True, null=True,
+                                              help_text=_("Guard image to inform user on how to use the website. "
+                                                          "Landscape Orientation"))
+    guard_image_portrait = models.ImageField(upload_to='guard_images', blank=True, null=True,
+                                             help_text=_("Guard image to inform user on how to use the website. "
+                                                         "Portrait Orientation"))
 
     class Meta:
         verbose_name = 'Operator'

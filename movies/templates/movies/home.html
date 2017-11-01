@@ -145,7 +145,17 @@
                     movieCategories.splice(0,1)
                 }
             });
-            $('#category-list li.recommended').addClass('active')
+            $('#category-list li.recommended').addClass('active');
+            $('#modal-guard-image').on('click', '.continue', function() {
+                localStorage.setItem('accept-terms', 'Yes')
+            }).on('click', '.quit', function() {
+                $('body').html('<div class="turn-down">Thank you for visiting. Good bye</div>')
+            });
+            if (!localStorage.getItem('accept-terms')) {
+                {% if config.guard_image_landscape.name and config.guard_image_portrait.name %}
+                $('#modal-guard-image').modal('show');
+                {% endif %}
+            }
         })()
     </script>
    {{ config.scripts|safe }}

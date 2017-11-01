@@ -18,15 +18,15 @@
                                 <img src="{% static 'shavida/img/logo_mtn_mobile_money.jpg' %}" height="90"/>
                             </a>
                         </li>
-                        <li class="col-sm-4 payment-method om" disabled
-                            data-action-url="{% url om.action_url_name %}">
-                            <a style="background: #15171e; opacity: .3" title="{% trans "Pay with Orange Money" %}">
+                        <li class="col-sm-4 payment-method om"
+                            data-action-url="{% url om.action_url_name %}?mean=orange-money">
+                            <a style="background: #15171e" title="{% trans "Pay with Orange Money" %}">
                                 <img src="{% static 'shavida/img/logo-OM-200x166.png' %}" height="90" />
                             </a>
-                            <strong style="background: rgba(255, 255, 255, .6); color: #000; float: left;
-                            height: 90px; line-height: 90px; margin-top: -90px; text-align: center; width: 100%">
-                                {% trans "UNAVAILABLE" %}
-                            </strong>
+{#                            <strong style="background: rgba(255, 255, 255, .6); color: #000; float: left;#}
+{#                            height: 90px; line-height: 90px; margin-top: -90px; text-align: center; width: 100%">#}
+{#                                {% trans "UNAVAILABLE" %}#}
+{#                            </strong>#}
                         </li>
                         {% if config.allow_cash_payment %}
                             <input type="hidden" name="pay_cash" value="yes"/>

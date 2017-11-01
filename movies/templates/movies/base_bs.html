@@ -1,4 +1,4 @@
-{% load i18n staticfiles auth_tokens user_agents %}
+{% load i18n static auth_tokens user_agents %}
 <!DOCTYPE html>
 <html lang="{{ lang }}">
     <head>
@@ -443,6 +443,7 @@
             {% include 'movies/snippets/modal_confirm_empty_cart.html' %}
             {% include 'movies/snippets/dialog_suggest_payment.html' %}
             {% include 'movies/snippets/modal_payment_options.html' %}
+            {% include 'movies/snippets/modal_guard_page.html' %}
         {% endblock %}
         <script src="{% static 'ikwen/js/jquery-1.12.4.min.js' %}"></script>
         <script src="{% static 'ikwen/js/bootstrap.min.js' %}"></script>
@@ -494,7 +495,7 @@
                         slideToClickedSlide: true
                     });
                     {# End Swiper menu #}
-                    $('.payment-method:not(.om)').click(function() {
+                    $('.payment-method').click(function() {
                         var actionURL = $(this).data('action-url');
                         $('form#checkout').attr('action', actionURL).submit();
                     });

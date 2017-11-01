@@ -10,8 +10,10 @@ from django.core.urlresolvers import reverse
 from django.http.response import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import slugify
+from django.utils.decorators import method_decorator
 from django.utils.module_loading import import_by_path
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import cache_page
 from ikwen_shavida.movies.models import *
 from ikwen_shavida.movies.utils import get_all_recommended, EXCLUDE_LIST_KEYS_KEY, get_recommended_for_category, \
     get_movies_series_share, is_in_temp_prepayment, render_suggest_payment_template, extract_resource_url
@@ -51,9 +53,10 @@ class CustomerView(BaseView):
 class Home(CustomerView):
     template_name = 'movies/home.html'
 
-    def get_context_data(self, **kwargs):
+    # @method_decorator(cache_page(60 * 5))
+    def get(self, request, *args, **kwargs):
         context = super(Home, self).get_context_data(**kwargs)
-        member = self.request.user
+        member = request.user
         recommended_items = []
         if member.is_authenticated():
             recommended_items = get_all_recommended(member, 12)
@@ -75,7 +78,7 @@ class Home(CustomerView):
         shuffle(recent_releases)
         sample_media = recent_releases[0] if len(recent_releases) > 0 else None
         og_url = ''
-        hash = self.request.GET.get('_escaped_fragment_')
+        hash = request.GET.get('_escaped_fragment_')
         if hash:
             media_type = 'movie' if hash.startswith('movie-') else 'series'
             slug = hash.replace('movie-', '') if media_type == 'movie' else hash.replace('series-', '')
@@ -91,12 +94,7 @@ class Home(CustomerView):
         context['og_item'] = sample_media
         context['og_url'] = og_url
 
-        return context
-
-    def render_to_response(self, context, **response_kwargs):
-        if is_touch_device(self.request):
-            self.template_name = 'movies/touch/home.html'
-        return super(Home, self).render_to_response(context, **response_kwargs)
+        return render(request, self.template_name, context)
 
 
 class MediaList(CustomerView):
@@ -133,21 +131,15 @@ class MediaList(CustomerView):
         context['og_url'] = og_url
         return context
 
+    # @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         slug = kwargs['slug']
         category = get_object_or_404(Category, slug=slug)
-        if category.is_adult and not self.request.user.is_authenticated():
+        if category.is_adult and not request.user.is_authenticated():
             next_url = reverse("ikwen:sign_in") + '?next_url=' + reverse('movies:media_list', args=(category.slug, ))
             return HttpResponseRedirect(next_url)
         context = self.get_context_data(**kwargs)
-        if is_touch_device(self.request):
-            self.template_name = 'movies/touch/movie_by_category.html'
         return render(request, self.template_name, context)
-
-    def render_to_response(self, context, **response_kwargs):
-        if is_touch_device(self.request):
-            self.template_name = 'movies/touch/movie_by_category.html'
-        return super(MediaList, self).render_to_response(context, **response_kwargs)
 
 
 class Bundles(CustomerView):
@@ -171,6 +163,7 @@ class Bundles(CustomerView):
         context['is_bundle_page'] = True
         return context
 
+    # @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         # Wipe Prepayment resulting from an incomplete checkout operation
         if request.user.is_authenticated():
@@ -178,11 +171,6 @@ class Bundles(CustomerView):
             UnitPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
             RetailPrepayment.objects.filter(member=request.user, status=Prepayment.PENDING).delete()
         return super(Bundles, self).get(request, *args, **kwargs)
-
-    def render_to_response(self, context, **response_kwargs):
-        if is_touch_device(self.request):
-            self.template_name = 'movies/touch/bundles.html'
-        return super(Bundles, self).render_to_response(context, **response_kwargs)
 
 
 class MoMoCheckout(CustomerView):
@@ -203,6 +191,10 @@ class MoMoCheckout(CustomerView):
 class MovieDetail(CustomerView):
     MAX_SUGGESTIONS = 8
     template_name = 'movies/movie_detail.html'
+
+    @method_decorator(cache_page(60 * 5))
+    def get(self, request, *args, **kwargs):
+        return super(MovieDetail, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(MovieDetail, self).get_context_data(**kwargs)
@@ -240,6 +232,10 @@ class MovieDetail(CustomerView):
 class SeriesDetail(CustomerView):
     MAX_SUGGESTIONS = 5
     template_name = 'movies/series_detail.html'
+
+    @method_decorator(cache_page(60 * 5))
+    def get(self, request, *args, **kwargs):
+        return super(SeriesDetail, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(SeriesDetail, self).get_context_data(**kwargs)

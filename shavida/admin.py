@@ -31,7 +31,7 @@ else:
     _readonly_fields = ('is_certified',)
     _fieldsets = [
         (_('Company'), {'fields': ('company_name', 'short_description', 'slogan', 'description',)}),
-        (_('Website'), {'fields': ('currency_code', 'currency_symbol',)}),
+        (_('Website'), {'fields': ('guard_image_landscape', 'guard_image_portrait',)}),
         (_('Address & Contact'), {'fields': ('contact_email', 'contact_phone', 'address', 'country', 'city')}),
         (_('Mailing'), {'fields': ('welcome_message', 'signature',)}),
         (_('Social'), {'fields': ('facebook_link', 'twitter_link', 'youtube_link',
