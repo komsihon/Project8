@@ -1,11 +1,12 @@
 {% extends 'movies/base_bs.html' %}
-{% load i18n staticfiles humanize currency %}
+{% load i18n staticfiles humanize currency cache %}
 
 {% block page_title %}
 <title>{% trans "Bundles" %} - {{ service.project_name }}</title>
 {% endblock %}
 
 {% block content %}
+    {% cache 300 bundles_content user.username %}
     <div id="content" class="container">
         <div class="container">
             <h2 class="main-title">{% trans "Choose your bundle" %}</h2>
@@ -40,6 +41,7 @@
             </div>
         </div>
     </div>
+    {% endcache %}
 {% endblock %}
 
 {% block js %}

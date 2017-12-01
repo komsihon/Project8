@@ -6,8 +6,10 @@
     <meta property="og:image" content="{% get_media_prefix %}{{ og_item.poster.name }}" />
     {% if settings.IS_GAME_VENDOR %}
         <meta property="og:description" content="{{ og_item.synopsis }}" />
+        <meta name="description" content="{{ og_item.synopsis }}" />
     {% else %}
         <meta property="og:description" content="{{ service.project_name }} - {{ config.short_description }}" />
+        <meta name="description" content="{{ service.project_name }} - {{ config.short_description }}" />
     {% endif %}
     <meta property="og:url" content="{{ service.url }}{{ og_url }}" />
     <meta property="og:site_name" content="{{ service.domain|upper }}" />
@@ -151,11 +153,9 @@
             }).on('click', '.quit', function() {
                 $('body').html('<div class="turn-down">Thank you for visiting. Good bye</div>')
             });
-            if (!localStorage.getItem('accept-terms')) {
-                {% if config.guard_image_landscape.name and config.guard_image_portrait.name %}
-                $('#modal-guard-image').modal('show');
-                {% endif %}
-            }
+            {% if config.guard_image_landscape.name and config.guard_image_portrait.name %}
+                $('#modal-guard-image').modal({backdrop: 'static', keyboard: false});
+            {% endif %}
         })()
     </script>
    {{ config.scripts|safe }}
