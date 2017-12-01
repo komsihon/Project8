@@ -60,6 +60,7 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
                                                          duration=bundle.duration, adult_authorized=bundle.adult_authorized,
                                                          currency=currency, payment_mean=payment_mean)
         request.session['amount'] = bundle.cost
+        request.session['is_unit_prepayment'] = False
     else:
         if media_type == 'movie':
             media = get_object_or_404(Movie, pk=media_id)
