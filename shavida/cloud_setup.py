@@ -150,7 +150,8 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     fh.close()
 
     # Import template database and set it up
-    subprocess.call(['mongorestore', '-d', database, CLOUD_FOLDER + '000Tpl/DB'])
+    host = getattr(settings, 'DATABASES')['default'].get('HOST', '127.0.0.1')
+    subprocess.call(['mongorestore', '--host', host, '-d', database, CLOUD_FOLDER + '000Tpl/DB'])
     add_database_to_settings(database)
     for group in Group.objects.using(database).all():
         try:
