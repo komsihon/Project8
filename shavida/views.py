@@ -5,7 +5,6 @@ import string
 from datetime import datetime
 
 import requests
-import shutil
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -16,26 +15,25 @@ from django.template.defaultfilters import slugify
 from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import gettext as _
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from django.views.generic import TemplateView
 from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import Member
 from ikwen.billing.models import CloudBillingPlan, IkwenInvoiceItem, InvoiceEntry
 from ikwen.core.models import Service, Application
 from ikwen.core.utils import get_service_instance
-from ikwen.core.views import BaseView as IkwenBaseView
-from ikwen.flatpages.models import FlatPage
 from ikwen.partnership.models import ApplicationRetailConfig
 from ikwen.theming.models import Template, Theme
 
 from ikwen_shavida.sales.models import SalesConfig, VODPrepayment, Prepayment
 from ikwen_shavida.shavida.cloud_setup import DeploymentForm, deploy
 from ikwen_shavida.shavida.models import Customer
-from ikwen_shavida.movies.models import Category, Movie, Series
+from ikwen_shavida.movies.models import Category, Series
 
 
-class BaseView(IkwenBaseView):
+class BaseView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(BaseView, self).get_context_data(**kwargs)
@@ -172,7 +170,7 @@ class PhoneConfirmation(BaseView):
             return HttpResponseRedirect(reverse('movies:bundles'))
 
 
-class DeployCloud(IkwenBaseView):
+class DeployCloud(TemplateView):
     template_name = 'shavida/cloud_setup/deploy.html'
 
     def get_context_data(self, **kwargs):
