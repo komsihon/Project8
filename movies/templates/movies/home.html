@@ -149,12 +149,14 @@
             });
             $('#category-list li.recommended').addClass('active');
             $('#modal-guard-image').on('click', '.continue', function() {
-                localStorage.setItem('accept-terms', 'Yes')
+                localStorage.setItem('accept-terms', 'Yes');
+                $('.modal-backdrop.fade.in').css('opacity', '0.5');
             }).on('click', '.quit', function() {
                 $('body').html('<div class="turn-down">Thank you for visiting. Good bye</div>')
             });
             {% if config.guard_image_landscape.name and config.guard_image_portrait.name %}
                 $('#modal-guard-image').modal({backdrop: 'static', keyboard: false});
+                $('.modal-backdrop.fade.in').css('opacity', '1');
             {% endif %}
         })()
     </script>
