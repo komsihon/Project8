@@ -2,9 +2,19 @@
 {% load i18n staticfiles auth_tokens %}
 
 {% block config_info %}
-    {% if app.slug == 'shavida-vod' %}
-        <input id="business-type" class="form-control input-sm" type="hidden" name="business_type" value="VOD" />
+    {% if settings.IS_IKWEN and user.is_staff %}
+        <div class="form-group row">
+            <label for="business-type" class="col-sm-4 col-md-3">{% trans "Business Type" %}</label>
+            <div class="col-sm-6 col-md-6">
+                <select id="business-type" name="business_type" class="form-control input-sm">
+                    <option value="">-------</option>
+                    <option value="VOD">{% trans "VOD" %}</option>
+                    <option value="ContentSale">{% trans "Content Sale" %}</option>
+                </select>
+                {{ form.business_type.errors }}
+            </div>
+        </div>
     {% else %}
-        <input id="business-type" class="form-control input-sm" type="hidden" name="business_type" value="ContentVendor" />
+        <input type="hidden" id="business-type" name="business_type" value="VOD">
     {% endif %}
 {% endblock %}

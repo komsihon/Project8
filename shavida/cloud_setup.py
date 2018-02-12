@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime, timedelta
 from threading import Thread
 
+from django import forms
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.mail import EmailMessage
@@ -24,16 +25,16 @@ from ikwen.billing.models import Invoice, PaymentMean, InvoicingConfig, JUMBOPAY
 from ikwen.billing.utils import get_next_invoice_number
 from ikwen.conf.settings import STATIC_ROOT, STATIC_URL, MEDIA_ROOT, MEDIA_URL
 from ikwen.core.models import Service, OperatorWallet, SERVICE_DEPLOYED
-from ikwen.core.tools import generate_django_secret_key, generate_random_key
+from ikwen.core.tools import generate_django_secret_key, generate_random_key, reload_server
 from ikwen.core.utils import add_database_to_settings, add_event, get_mail_content, \
     get_service_instance
 from ikwen.flatpages.models import FlatPage
 from ikwen.partnership.models import PartnerProfile
 from ikwen.theming.models import Template, Theme
 
-__author__ = 'Kom Sihon'
+import logging
+logger = logging.getLogger('ikwen')
 
-from django import forms
 
 if getattr(settings, 'LOCAL_DEV', False):
     CLOUD_HOME = '/home/komsihon/PycharmProjects/CloudTest/'
@@ -113,45 +114,54 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
         if os.path.exists(media_root):
             shutil.rmtree(media_root)
         shutil.copytree(default_images_folder, media_root)
+        logger.debug("Media folder '%s' successfully created from '%s'" % (media_root, default_images_folder))
     elif not os.path.exists(media_root):
         os.makedirs(media_root)
+        logger.debug("Media folder '%s' successfully created empty" % media_root)
     favicons_folder = media_root + 'favicons'
     if not os.path.exists(favicons_folder):
         os.makedirs(favicons_folder)
     if os.path.exists(website_home_folder):
         shutil.rmtree(website_home_folder)
     shutil.copytree(app_folder, website_home_folder)
+    logger.debug("Service folder '%s' successfully created" % website_home_folder)
+
+    if business_type == 'VOD':
+        settings_template = 'shavida/cloud_setup/settings.vod.html'
+    else:
+        settings_template = 'shavida/cloud_setup/settings.content.html'
+        if not sales_unit:
+            sales_unit = SalesConfig.DATA_VOLUME
 
     service = Service(member=member, app=app, project_name=project_name, project_name_slug=ikwen_name, domain=domain,
                       database=database, url='http://' + domain, domain_type=domain_type, expiry=expiry,
                       admin_url='http://' + admin_url, billing_plan=billing_plan, billing_cycle=billing_cycle,
                       monthly_cost=monthly_cost, version=Service.TRIAL, retailer=partner_retailer,
-                      api_signature=api_signature, home_folder=website_home_folder)
+                      api_signature=api_signature, home_folder=website_home_folder, settings_template=settings_template)
     service.save(using=UMBRELLA)
-
-    if business_type == 'VOD':
-        business_setting = 'IS_VOD_OPERATOR'
-    else:
-        business_setting = 'IS_CONTENT_VENDOR'
-        if not sales_unit:
-            sales_unit = SalesConfig.DATA_VOLUME
+    logger.debug("Service %s successfully created" % pname)
 
     # Re-create settings.py file as well as apache.conf file for the newly created project
     secret_key = generate_django_secret_key()
     allowed_hosts = '"%s", "www.%s"' % (domain, domain)
-    settings_tpl = get_template('shavida/cloud_setup/settings.html')
-    settings_context = Context({'secret_key': secret_key, 'ikwen_name': ikwen_name, 'business_setting': business_setting,
-                                'service': service, 'static_root': STATIC_ROOT, 'static_url': STATIC_URL,
+    settings_tpl = get_template(settings_template)
+    settings_context = Context({'secret_key': secret_key, 'ikwen_name': ikwen_name, 'service': service,
+                                'static_root': STATIC_ROOT, 'static_url': STATIC_URL,
                                 'media_root': media_root, 'media_url': media_url, 'app_folder': app_folder,
                                 'allowed_hosts': allowed_hosts, 'debug': getattr(settings, 'DEBUG', False),
                                 'sales_unit': sales_unit})
-    fh = open(website_home_folder + '/conf/settings.py', 'w')
+    settings_file = website_home_folder + '/conf/settings.py'
+    fh = open(settings_file, 'w')
     fh.write(settings_tpl.render(settings_context))
     fh.close()
+    logger.debug("Settings file '%s' successfully created" % settings_file)
 
     # Import template database and set it up
     host = getattr(settings, 'DATABASES')['default'].get('HOST', '127.0.0.1')
-    subprocess.call(['mongorestore', '--host', host, '-d', database, CLOUD_FOLDER + '000Tpl/DB'])
+    db_folder = CLOUD_FOLDER + '000Tpl/DB'
+    subprocess.call(['mongorestore', '--host', host, '-d', database, db_folder])
+    logger.debug("Database %s successfully created on host %s from %s" % (database, host, db_folder))
+
     add_database_to_settings(database)
     for group in Group.objects.using(database).all():
         try:
@@ -190,6 +200,7 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
 
     app.save(using=database)
     member.save(using=database)
+    logger.debug("Member %s access rights successfully set for service %s" % (member.username, pname))
 
     # Copy payment means to local database
     for mean in PaymentMean.objects.using(UMBRELLA).all():
@@ -205,12 +216,14 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
             else:
                 mean.is_active = False
         mean.save(using=database)
+        logger.debug("PaymentMean %s created in database: %s" % (mean.slug, database))
 
     # Copy themes to local database
     for template in Template.objects.using(UMBRELLA).all():
         template.save(using=database)
     for th in Theme.objects.using(UMBRELLA).all():
         th.save(using=database)
+    logger.debug("Template and theme successfully bound for service: %s" % pname)
 
     FlatPage.objects.using(database).create(url=FlatPage.AGREEMENT, title=FlatPage.AGREEMENT)
     FlatPage.objects.using(database).create(url=FlatPage.LEGAL_MENTIONS, title=FlatPage.LEGAL_MENTIONS)
@@ -219,6 +232,7 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     obj_list, created = UserPermissionList.objects.using(database).get_or_create(user=member)
     obj_list.group_fk_list.append(new_sudo_group.id)
     obj_list.save(using=database)
+    logger.debug("Member %s successfully added to sudo group for service: %s" % (member.username, pname))
 
     OperatorWallet.objects.using('wallets').create(nonrel_id=service.id)
     mail_signature = "%s<br>" \
@@ -237,6 +251,7 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     config.save(using=database)
 
     InvoicingConfig.objects.using(database).create()
+    logger.debug("Configuration successfully added for service: %s" % pname)
 
     # Copy samples to local database
     for media in Movie.objects.using(database).all():
@@ -245,6 +260,7 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     for media in Series.objects.using(database).all():
         media.provider = service
         media.save(using=database)
+    logger.debug("Sample items successfully copied to database %s" % database)
 
     # Apache Server cloud_setup
     if getattr(settings, 'LOCAL_DEV', False):
@@ -256,8 +272,9 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     fh.write(apache_tpl.render(apache_context))
     fh.close()
 
-    subprocess.call(['sudo', 'ln', '-sf', website_home_folder + '/apache.conf', '/etc/apache2/sites-enabled/' + domain + '.conf'])
-    subprocess.call(['sudo', 'service', 'apache2', 'reload'])
+    vhost = '/etc/apache2/sites-enabled/' + domain + '.conf'
+    subprocess.call(['sudo', 'ln', '-sf', website_home_folder + '/apache.conf', vhost])
+    logger.debug("Apache Virtual Host '%s' successfully created" % vhost)
 
     # Send notification and Invoice to customer
     number = get_next_invoice_number()
@@ -298,8 +315,14 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     html_content = get_mail_content(subject, '', template_name='core/mails/service_deployed.html',
                                     extra_context={'service_activated': service, 'invoice': invoice,
                                                    'member': member, 'invoice_url': invoice_url})
-    # msg = EmailMessage(subject, html_content, sender, ['rsihon@gmail.com'])
     msg = EmailMessage(subject, html_content, sender, [member.email])
+    bcc = ['contact@ikwen.com']
+    if vendor.config.contact_email:
+        bcc.append(vendor.config.contact_email)
+    msg.bcc = list(set(bcc))
     msg.content_subtype = "html"
     Thread(target=lambda m: m.send(), args=(msg, )).start()
+    logger.debug("Notice email submitted to %s" % member.email)
+    Thread(target=reload_server).start()
+    logger.debug("Apache Scheduled to reload in 5s")
     return service
