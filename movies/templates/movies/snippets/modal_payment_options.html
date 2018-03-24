@@ -13,13 +13,13 @@
                     <input type="hidden" id="media-type" name="media_type" />
                     <ul class="row">
                         <li class="col-sm-4 payment-method{% if not config.is_pro_version and not config.allow_cash_payment %} col-sm-offset-2{% endif %}"
-                            data-action-url="{% url mtn_momo.action_url_name %}">
+                            {% if mtn_momo %}data-action-url="{% url mtn_momo.action_url_name %}"{% endif %}>
                             <a style="background: #ffca06" title="{% trans "Pay with MTN Mobile Money" %}">
                                 <img src="{% static 'shavida/img/logo_mtn_mobile_money.jpg' %}" height="90"/>
                             </a>
                         </li>
                         <li class="col-sm-4 payment-method om"
-                            data-action-url="{% url om.action_url_name %}?mean=orange-money">
+                            {% if om %}data-action-url="{% url om.action_url_name %}?mean=orange-money"{% endif %}>
                             <a style="background: #15171e" title="{% trans "Pay with Orange Money" %}">
                                 <img src="{% static 'shavida/img/logo-OM-200x166.png' %}" height="90" />
                             </a>
@@ -36,7 +36,7 @@
                                 </a>
                             </li>
                         {% endif %}
-                        {% if config.is_pro_version %}
+                        {% if config.is_pro_version and paypal %}
                             <li class="col-sm-4 payment-method" data-action-url="{{ paypal_action_url }}">
                                 <a href="#" style="border: 1px solid #eee">
                                     <img src="{% static 'shavida/img/payment-logo.jpg' %}" height="90" style="width: 100%"/>
