@@ -12,8 +12,8 @@ def project_settings(request):
     unit = getattr(settings, 'SALES_UNIT', SalesConfig.BROADCASTING_TIME)
     SALES_UNIT_STR = _("GigaBytes") if unit == SalesConfig.DATA_VOLUME else _("Hours")
     SALES_UNIT_STR_XS = "GB" if unit == SalesConfig.DATA_VOLUME else "H"
-    shavida_settings = ikwen_settings(request)['settings']
-    shavida_settings.update({
+    shavida_settings = ikwen_settings(request)
+    shavida_settings['settings'].update({
         'VOD_COUNTER_INTERVAL': getattr(settings, 'VOD_COUNTER_INTERVAL', 5),
         'IS_VOD_OPERATOR': getattr(settings, 'IS_VOD_OPERATOR', False),
         'IS_CONTENT_VENDOR': getattr(settings, 'IS_CONTENT_VENDOR', False),
@@ -22,6 +22,4 @@ def project_settings(request):
         'SALES_UNIT_STR': SALES_UNIT_STR,
         'SALES_UNIT_STR_XS': SALES_UNIT_STR_XS,
     })
-    return {
-        'settings': shavida_settings
-    }
+    return shavida_settings
