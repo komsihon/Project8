@@ -14,6 +14,8 @@ from django.template import Context
 from django.template.defaultfilters import slugify
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
+from ikwen.billing.mtnmomo.views import MTN_MOMO
+from ikwen.billing.orangemoney.views import ORANGE_MONEY
 from ikwen_shavida.movies.models import Movie, Series
 from ikwen_shavida.sales.models import SalesConfig
 from ikwen_shavida.shavida.models import OperatorProfile
@@ -234,7 +236,10 @@ def deploy(app, member, business_type, project_name, billing_plan, theme, monthl
     obj_list.save(using=database)
     logger.debug("Member %s successfully added to sudo group for service: %s" % (member.username, pname))
 
-    OperatorWallet.objects.using('wallets').create(nonrel_id=service.id)
+    # Create wallets
+    OperatorWallet.objects.using('wallets').create(nonrel_id=service.id, provider=MTN_MOMO)
+    OperatorWallet.objects.using('wallets').create(nonrel_id=service.id, provider=ORANGE_MONEY)
+
     mail_signature = "%s<br>" \
                      "<a href='%s'>%s</a>" % (project_name, 'http://' + domain, domain)
     config = OperatorProfile(service=service, media_url=media_url, currency_code='XAF', currency_symbol='XAF',
