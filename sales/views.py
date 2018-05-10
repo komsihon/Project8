@@ -65,9 +65,11 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
         if media_type == 'movie':
             media = get_object_or_404(Movie, pk=media_id)
             request.session['media_type'] = 'movie'
+            hashbang = 'movie-' + media.slug
         else:
             media = get_object_or_404(Series, pk=media_id)
             request.session['media_type'] = 'series'
+            hashbang = 'series-' + media.slug
         config = service.config
         duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
         prepayment = UnitPrepayment.objects.create(media_type=media_type, media_id=media_id,  member=member,
@@ -79,21 +81,20 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
     request.session['object_id'] = prepayment.id
 
     mean = request.GET.get('mean', MTN_MOMO)
-    if mean is None or mean == MTN_MOMO:
-        request.session['is_momo_payment'] = True
-    elif mean == ORANGE_MONEY:
-        if service.domain == 'xmboa.com':
-            notif_url = 'http://ikwen.com/console/'
-            return_url = 'http://ikwen.com/console/'
-            cancel_url = 'http://ikwen.com/console/'
-        else:
-            notif_url = service.url + reverse('movies:home')
+    if service.domain == 'xmboa.com' and mean == ORANGE_MONEY:
+        notif_url = 'http://ikwen.com/console/'
+        cancel_url = 'http://ikwen.com/console/'
+        return_url = 'http://ikwen.com/console/'
+    else:
+        notif_url = service.url + reverse('movies:home')
+        cancel_url = service.url + reverse('movies:bundles')
+        if bundle_id:
             return_url = service.url + reverse('movies:home')
-            cancel_url = service.url + reverse('movies:bundles')
-        request.session['notif_url'] = notif_url  # Unused. Callback is run by querying transation status
-        request.session['return_url'] = return_url
-        request.session['cancel_url'] = cancel_url
-        request.session['is_momo_payment'] = False
+        else:
+            return_url = service.url + reverse('movies:home') + '#!' + hashbang
+    request.session['notif_url'] = notif_url  # Orange Money only. Unused because of API Bug. Callback is run by querying transation status
+    request.session['cancel_url'] = cancel_url  # Orange Money only
+    request.session['return_url'] = return_url
 
 
 def confirm_payment(request, *args, **kwargs):
@@ -110,17 +111,12 @@ def confirm_payment(request, *args, **kwargs):
     is_unit_prepayment = request.session.get('is_unit_prepayment')
 
     if is_unit_prepayment:
-        pay_cash, next_url = choose_temp_bundle(request, payment_successful=True, **kwargs)
+        choose_temp_bundle(request, payment_successful=True, **kwargs)
     elif getattr(settings, 'IS_VOD_OPERATOR', False):
-        pay_cash, next_url = choose_vod_bundle(request, payment_successful=True, **kwargs)
+        choose_vod_bundle(request, payment_successful=True, **kwargs)
     else:
-        pay_cash = False
-        next_url = choose_retail_bundle(request, payment_successful=True, **kwargs)
-
-    if not pay_cash and request.session.get('is_momo_payment'):
-        return {'success': True, 'next_url': next_url}
-    else:
-        return HttpResponseRedirect(next_url)
+        choose_retail_bundle(request, payment_successful=True, **kwargs)
+    return HttpResponseRedirect(request.session['return_url'])
 
 
 @login_required
@@ -153,8 +149,6 @@ def choose_vod_bundle(request, *args, **kwargs):
         share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
 
     messages.success(request, _("Your bundle was successfully activated."))
-    next_url = reverse('movies:home')
-    return pay_cash, next_url
 
 
 @login_required
@@ -196,8 +190,6 @@ def choose_retail_bundle(request, *args, **kwargs):
         share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
 
     messages.success(request, _("Your bundle was successfully activated."))
-    next_url = reverse('movies:home')
-    return next_url
 
 
 @login_required
@@ -214,12 +206,10 @@ def choose_temp_bundle(request, *args, **kwargs):
             media = Movie.objects.get(pk=media_id)
             amount = media.view_price
             media_type = 'movie'
-            hashbang = 'movie-' + media.slug
         except Movie.DoesNotExist:
             media = get_object_or_404(Series, pk=media_id)
             amount = media.view_price
             media_type = 'series'
-            hashbang = 'series-' + media.slug
         duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
         UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
                                       amount=amount, duration=duration)
@@ -228,12 +218,6 @@ def choose_temp_bundle(request, *args, **kwargs):
         if not object_id:
             object_id = kwargs['object_id']
         prepayment = UnitPrepayment.objects.get(pk=object_id)
-        try:
-            media = Movie.objects.get(pk=prepayment.media_id)
-            hashbang = 'movie-' + media.slug
-        except Movie.DoesNotExist:
-            media = Series.objects.get(pk=prepayment.media_id)
-            hashbang = 'series-' + media.slug
         now = datetime.now()
         expiry = now + timedelta(days=prepayment.duration)
         prepayment.paid_on = now
@@ -247,8 +231,6 @@ def choose_temp_bundle(request, *args, **kwargs):
         share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
 
     messages.success(request, _("Your bundle was successfully activated."))
-    next_url = reverse('movies:home') + '#!' + hashbang
-    return pay_cash, next_url
 
 
 def share_payment_and_set_stats(customer, amount, payment_mean):
