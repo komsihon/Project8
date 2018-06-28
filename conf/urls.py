@@ -8,7 +8,6 @@ from ikwen_shavida.sales.views import Dashboard
 
 admin.autodiscover()
 
-
 __author__ = "Kom Sihon"
 
 urlpatterns = patterns(
