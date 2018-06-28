@@ -25,6 +25,14 @@
 		</Files>
 	</Directory>
 
+	<Directory /home/ikwen/Apps/Shavida/>
+		<Files robots.txt>
+			Order deny,allow
+		    Require all granted
+		</Files>
+	</Directory>
+    Alias /robots.txt /home/ikwen/Apps/Shavida/robots.txt
+
 	WSGIDaemonProcess {{ ikwen_name }} python-path=/home/ikwen/Cloud/Shavida/{{ ikwen_name }}:/home/yayatoo/virtualenv/local/lib/python2.7/site-packages
 	WSGIProcessGroup {{ ikwen_name }}
 	WSGIScriptAlias / /home/ikwen/Cloud/Shavida/{{ ikwen_name }}/conf/wsgi.py
