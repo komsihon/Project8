@@ -21,6 +21,7 @@ class Customer(AbstractWatchModel):
     adult_authorized = models.BooleanField(default=False, editable=False)
     service = models.ForeignKey(Service, blank=True, null=True, related_name='+',
                                 help_text=_("Website of this Operator."))
+    last_payment_on = models.DateTimeField(blank=True, null=True, db_index=True)
 
     turnover_history = ListField()
     orders_count_history = ListField()
