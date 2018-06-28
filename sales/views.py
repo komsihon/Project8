@@ -21,7 +21,7 @@ from ikwen.billing.orangemoney.views import ORANGE_MONEY
 from ikwen.conf.settings import FALLBACK_SHARE_RATE
 from ikwen.core.models import Service
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
-    add_event, calculate_watch_info, rank_watch_objects
+    add_event, calculate_watch_info, rank_watch_objects, slice_watch_objects
 from ikwen.core.views import DashboardBase
 from ikwen.partnership.models import ApplicationRetailConfig
 from ikwen_shavida.movies.models import Movie, Series
@@ -301,6 +301,7 @@ def share_payment_and_set_stats(customer, amount, payment_mean):
     increment_history_field(app_umbrella, 'transaction_count_history')
 
     set_counters(customer)
+    customer.last_payment_on = datetime.now()
     increment_history_field(customer, 'turnover_history', amount)
     increment_history_field(customer, 'orders_count_history')
 
@@ -506,16 +507,16 @@ class Dashboard(DashboardBase):
                 'aepo': '%.2f' % aepo_last_28_days,  # AEPO: Avg Earning Per Order
             }
         }
-        customers = list(Customer.objects.all())
-        for customer in customers:
-            set_counters(customer)
+        customers_today = slice_watch_objects(Customer)
+        customers_yesterday = slice_watch_objects(Customer, 1)
+        customers_last_week = slice_watch_objects(Customer, 7)
+        customers_last_28_days = slice_watch_objects(Customer, 28)
         customers_report = {
-            'today': rank_watch_objects(customers, 'turnover_history'),
-            'yesterday': rank_watch_objects(customers, 'turnover_history', 1),
-            'last_week': rank_watch_objects(customers, 'turnover_history', 7),
-            'last_28_days': rank_watch_objects(customers, 'turnover_history', 28)
+            'today': rank_watch_objects(customers_today, 'turnover_history'),
+            'yesterday': rank_watch_objects(customers_yesterday, 'turnover_history', 1),
+            'last_week': rank_watch_objects(customers_last_week, 'turnover_history', 7),
+            'last_28_days': rank_watch_objects(customers_last_28_days, 'turnover_history', 28)
         }
-
         context['orders_report'] = orders_report
         context['customers_report'] = customers_report
         return context
