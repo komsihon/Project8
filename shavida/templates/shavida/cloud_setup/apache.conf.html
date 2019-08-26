@@ -9,6 +9,7 @@
 	ServerName {% if is_naked_domain %}www.{% endif %}{{ domain }}
 
     Alias /crossdomain.xml /home/ikwen/static/shavida/crossdomain.xml
+    Alias /robots.txt /home/ikwen/Apps/Shavida/robots.txt
 
 	DocumentRoot /home/ikwen/Cloud/Shavida/{{ ikwen_name }}
 	<Directory /home/ikwen/Cloud/Shavida/{{ ikwen_name }}/conf/>
@@ -17,21 +18,6 @@
 		    Require all granted
 		</Files>
 	</Directory>
-
-	<Directory /home/ikwen/static/shavida/>
-		<Files crossdomain.xml>
-			Order deny,allow
-		    Require all granted
-		</Files>
-	</Directory>
-
-	<Directory /home/ikwen/Apps/Shavida/>
-		<Files robots.txt>
-			Order deny,allow
-		    Require all granted
-		</Files>
-	</Directory>
-    Alias /robots.txt /home/ikwen/Apps/Shavida/robots.txt
 
 	WSGIDaemonProcess {{ ikwen_name }} python-path=/home/ikwen/Cloud/Shavida/{{ ikwen_name }}:/home/yayatoo/virtualenv/local/lib/python2.7/site-packages
 	WSGIProcessGroup {{ ikwen_name }}
