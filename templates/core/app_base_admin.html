@@ -17,6 +17,23 @@
                             <a href="{% url 'admin:index' %}">{% trans "Data Management" %}</a>
                         </li>
                     </ul>
+                    <div class="divider"></div>
+                    <ul class="nav nav-pills nav-stacked">
+                        <li role="presentation" class="menus">
+                            <a href="javascript:;" data-toggle="collapse" data-target="#echo" style="padding-right: 0;">
+                                Echo
+                                <i class="fa fa-fw fa-caret-down"></i>
+                            </a>
+                            <ul id="echo" class="nav nav-pills nav-stacked" style="padding-left: 15px;">
+                                <li class="echo-sms">
+                                    <a href="{% url "echo:sms_campaign" %}">SMS</a>
+                                </li>
+                                <li class="mail-campaigns">
+                                    <a href="{% url "echo:mailcampaign_list" %}">Mail</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                     {% if perms.accesscontrol.sudo %}
                         <div class="divider"></div>
                         <ul class="nav nav-pills nav-stacked">

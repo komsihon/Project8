@@ -8,8 +8,6 @@ from ikwen_shavida.sales.views import Dashboard
 
 admin.autodiscover()
 
-__author__ = "Kom Sihon"
-
 urlpatterns = patterns(
     '',
     url(r'^$', Home.as_view(), name='home'),
@@ -25,6 +23,8 @@ urlpatterns = patterns(
     url(r'^sales/', include('ikwen_shavida.sales.urls', namespace='sales')),
     url(r'^page/(?P<slug>[-\w]+)/$', FlatPageView.as_view(), name='flatpage'),
     url(r'^billing/', include('ikwen.billing.urls', namespace='billing')),
+
+    url(r'^echo/', include('echo.urls', namespace='echo')),
 
     url(r'^', include('ikwen_shavida.movies.urls', namespace='movies')),
     url(r'^', include('ikwen_shavida.shavida.urls', namespace='shavida')),

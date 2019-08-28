@@ -14,6 +14,8 @@ from django.utils.decorators import method_decorator
 from django.utils.module_loading import import_by_path
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import cache_page
+
+from ikwen.accesscontrol.utils import VerifiedEmailTemplateView
 from ikwen_shavida.movies.models import *
 from ikwen_shavida.movies.utils import get_all_recommended, EXCLUDE_LIST_KEYS_KEY, get_recommended_for_category, \
     get_movies_series_share, is_in_temp_prepayment, render_suggest_payment_template, extract_resource_url
@@ -23,7 +25,7 @@ from ikwen_shavida.sales.models import RetailBundle, VODBundle, VODPrepayment, P
 from ikwen_shavida.shavida.views import BaseView
 
 
-class CustomerView(BaseView):
+class CustomerView(VerifiedEmailTemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CustomerView, self).get_context_data(**kwargs)
@@ -47,6 +49,7 @@ class CustomerView(BaseView):
             context['SALES_UNIT_STR'] = _("GigaBytes") if unit == SalesConfig.DATA_VOLUME else _("Brodcasting hours")
             context['available_quota'] = available_quota
             context['display_available_quota'] = display_available_quota
+        context['all_categories'] = Category.objects.filter(visible=True).order_by('order_of_appearance')
         return context
 
 
@@ -54,9 +57,9 @@ class Home(CustomerView):
     template_name = 'movies/home.html'
 
     # @method_decorator(cache_page(60 * 5))
-    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
         context = super(Home, self).get_context_data(**kwargs)
-        member = request.user
+        member = self.request.user
         recommended_items = []
         if member.is_authenticated():
             recommended_items = get_all_recommended(member, 12)
@@ -78,7 +81,7 @@ class Home(CustomerView):
         shuffle(recent_releases)
         sample_media = recent_releases[0] if len(recent_releases) > 0 else None
         og_url = ''
-        hash = request.GET.get('_escaped_fragment_')
+        hash = self.request.GET.get('_escaped_fragment_')
         if hash:
             media_type = 'movie' if hash.startswith('movie-') else 'series'
             slug = hash.replace('movie-', '') if media_type == 'movie' else hash.replace('series-', '')
@@ -93,8 +96,7 @@ class Home(CustomerView):
                 pass
         context['og_item'] = sample_media
         context['og_url'] = og_url
-
-        return render(request, self.template_name, context)
+        return context
 
 
 class MediaList(CustomerView):
