@@ -13,10 +13,10 @@
             <link rel='stylesheet' href="{% static 'ikwen/css/flatly.bootstrap.min.css' %}" />
             <link rel='stylesheet' href="{% static 'shavida/swiper/css/swiper.min.css' %}" />
             <link rel='stylesheet' href="{% static 'shavida/flowplayer/skin/skin.css' %}" />
-            <link rel='stylesheet' href="{% static 'shavida/css/base.css' %}" />
+            <link rel='stylesheet' href="{% static 'shavida/css/base.css' %}?v=19.11.13" />
             {% with theme=config.theme %}
                 {% if theme %}
-                    <link rel='stylesheet' href="{% static 'shavida/skins/' %}{{ theme.template.slug }}/{{ theme.slug }}.css" />
+                    <link rel='stylesheet' href="{% static 'shavida/skins/' %}{{ theme.template.slug }}/{{ theme.slug }}.css?v=19.11.13" />
                 {% endif %}
             {% endwith %}
 		{% endblock %}
@@ -39,11 +39,13 @@
                 <div id="category-list" class="swiper-slide main" style="display: none">
                     <div id="menu-xs" class="visible-xs">
                         <h3>{% trans "Menu" %}</h3>
+                        {% if config.allow_bundle_prepayment %}
                         <ul class="nav nav-pills nav-stacked">
                             <li>
                                 <a href="{% url 'movies:bundles' %}">{% trans "Bundles" %}</a>
                             </li>
                         </ul>
+                        {% endif %}
                     </div>
                     <div style="min-height: 270px">
                         <h3>{% trans "Categories" %}</h3>
@@ -117,6 +119,8 @@
                                                             <li>
                                                                 <a href="{% url 'ikwen:staff_router' %}">Admin</a>
                                                             </li>
+                                                        {% endif %}
+                                                        {% if user.is_superuser %}
                                                             <li>
                                                                 <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
                                                             </li>
@@ -249,9 +253,11 @@
                                             </div>
                                         {% endif %}
                                         <ul class="nav navbar-nav navbar-right{% if settings.IS_CONTENT_VENDOR %} content-vendor{% endif %}" style="margin: 0 -15px 0 0">
+                                            {% if config.allow_bundle_prepayment %}
                                             <li>
                                                 <a href="{% url 'movies:bundles' %}">{% trans "Bundles" %}</a>
                                             </li>
+                                            {% endif %}
                                             {% if user.is_authenticated %}
                                                 {% if settings.IS_CONTENT_VENDOR %}
                                                     <li class="show-cart visible-xs visible-sm">
@@ -281,6 +287,8 @@
                                                             <li>
                                                                 <a href="{% url 'ikwen:staff_router' %}">Admin</a>
                                                             </li>
+                                                        {% endif %}
+                                                        {% if user.is_superuser %}
                                                             <li>
                                                                 <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
                                                             </li>
@@ -310,6 +318,8 @@
                                                 <li>
                                                     <a href="{% url 'ikwen:staff_router' %}">Admin</a>
                                                 </li>
+                                            {% endif %}
+                                            {% if user.is_superuser %}
                                                 <li>
                                                     <a href="{% url 'admin:index' %}">{% trans "Data management" %}</a>
                                                 </li>

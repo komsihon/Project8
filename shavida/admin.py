@@ -40,7 +40,7 @@ else:
     ]
     if getattr(settings, 'IS_VOD_OPERATOR', False):
         _fieldsets.insert(2, (_('VOD'), {'fields': ('data_sources', 'movies_timeout', 'series_timeout',
-                                                    'allow_unit_prepayment', 'allow_cash_payment')}))
+                                                    'allow_unit_prepayment', 'allow_bundle_prepayment', 'allow_cash_payment')}))
 
 
 class OperatorProfileAdmin(admin.ModelAdmin):

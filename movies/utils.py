@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
+import base64
+import hashlib
+import time
 from bson import ObjectId
 from datetime import datetime
+
+from currencies.context_processors import currencies
+from django.conf import settings
 from django.core.cache import cache
 
 from django.core.urlresolvers import reverse
@@ -146,15 +152,14 @@ def clear_user_cache(member):
         cache.delete_many(exclude_list_keys)
 
 
-def is_in_temp_prepayment(member, media):
+def get_unit_prepayment(member, media):
     now = datetime.now()
     for tp in UnitPrepayment.objects.filter(member=member, status=Prepayment.CONFIRMED, expiry__gte=now):
         if type(media).__name__ == "Movie":
             if media.id == tp.media_id:
-                return True
+                return tp
         elif media.series.id == tp.media_id:
-            return True
-    return False
+            return tp
 
 
 def extract_resource_url(iframe_code):
@@ -171,17 +176,21 @@ def extract_resource_url(iframe_code):
     return iframe_code[s+6:e]
 
 
-def render_suggest_payment_template(media):
+def render_suggest_payment_template(request, media):
     config = get_service_instance().config
     html_template = get_template('movies/snippets/suggest_payment.html')
     if isinstance(media, SeriesEpisode):
         media = media.series
         media.type = 'series'
+    try:
+        CURRENCY = currencies(request)['CURRENCY']
+    except:
+        CURRENCY = None
     d = Context({
         'media': media,
         'config': config,
         'choose_temp_bundle_url': "%s?media_type=%s&media_id=%s" % (reverse('sales:choose_temp_bundle'), media.type, media.id),
-        'currency': config.currency_symbol
+        'CURRENCY': CURRENCY
     })
     return html_template.render(d)
 
@@ -197,3 +206,18 @@ def as_matrix(movies_list, column_count):
             matrix.append(row)
             row = []
     return matrix
+
+
+def generate_download_link(filename, expires):
+    if not filename:
+        return
+    secret = getattr(settings, 'SECURE_LINK_SECRET', 'enigma')
+    movies_base_folder = getattr(settings, 'MOVIES_BASE_FOLDER', 'movies/')
+    input_string = '%d%s %s' % (expires, movies_base_folder + filename, secret)
+    m = hashlib.md5()
+    m.update(input_string)
+    md5 = base64.b64encode(m.digest())
+    md5 = md5.replace('=', '').replace('+', '-').replace('/', '_')
+    static_url = getattr(settings, 'SECURE_LINK_BASE_URL', 'http://cdn.ikwen.com/')
+    link = static_url + filename + '?md5=' + md5 + '&expires=%d' % expires
+    return link

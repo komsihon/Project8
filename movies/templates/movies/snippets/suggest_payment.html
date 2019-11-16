@@ -1,11 +1,11 @@
 {% load i18n static currency humanize %}
 <img src="{% static 'shavida/img/embarassed-smiley.jpg' %}"/>
 <p class="error"></p>
-<div class="{% if config.allow_unit_prepayment %}col-sm-5{% else %}col-sm-6 col-sm-offset-3{% endif %}">
-    <a class="btn btn-success btn-block" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
-    <p class="text-muted" style="font-size: .85em">{% trans "Stream without limitation." %}</p>
-</div>
-{% if config.allow_unit_prepayment %}
+{% if config.allow_bundle_prepayment and config.allow_unit_prepayment %}
+    <div class="col-sm-5">
+        <a class="btn btn-success btn-block" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
+        <p class="text-muted" style="font-size: .85em">{% trans "Stream without limitation." %}</p>
+    </div>
     <div class="col-sm-5 col-sm-offset-2">
         <button class="btn btn-primary btn-block pay-single"
                 data-id="{{ media.id }}" data-type="{{ media.type }}">{% trans "Pay for this item only" %}</button>
@@ -14,8 +14,53 @@
         </p>
         <p style="margin-top: 5px">
             <strong>{% trans "Cost" %}:</strong>
-            <em class="text-muted">{{ CURRENCY.symbol }} {{ media.view_price|currency:CURRENCY.code|floatformat:CURRENCY.precision|intcomma }}</em>
+            {% if CURRENCY %}
+                <em class="text-muted">{{ CURRENCY.symbol }} {{ media.view_price|currency:CURRENCY.code|floatformat:CURRENCY.precision|intcomma }}</em>
+            {% else %}
+                <em class="text-muted">{{ config.currency_symbol }} {{ media.view_price }}</em>
+            {% endif %}
         </p>
+    </div>
+{% else %}
+    <div class="col-sm-5">
+        {% if config.allow_unit_prepayment %}
+            <button class="btn btn-primary btn-block pay-single" data-action="stream"
+                    data-id="{{ media.id }}" data-type="{{ media.type }}">{% trans "Pay to view this item only" %}</button>
+            <p class="text-muted" style="font-size: .85em">
+                {% trans "Watch a movie or all episodes of a series." %}
+            </p>
+            <p style="margin-top: 5px">
+                <strong>{% trans "Cost" %}:</strong>
+                {% if CURRENCY %}
+                    <em class="text-muted">{{ CURRENCY.symbol }} {{ media.view_price|currency:CURRENCY.code|floatformat:CURRENCY.precision|intcomma }}</em>
+                {% else %}
+                    <em class="text-muted">{{ config.currency_symbol }} {{ media.view_price }}</em>
+                {% endif %}
+            </p>
+        {% else %}
+            <a class="btn btn-success btn-block" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
+            <p class="text-muted" style="font-size: .85em">{% trans "Stream without limitation." %}</p>
+        {% endif %}
+    </div>
+    <div class="col-sm-5 col-sm-offset-2">
+        {% if config.allow_unit_prepayment %}
+            <button class="btn btn-primary btn-block pay-single" data-action="download"
+                    data-id="{{ media.id }}" data-type="{{ media.type }}">{% trans "Pay to download this item only" %}</button>
+            <p class="text-muted" style="font-size: .85em">
+                {% trans "Download a movie or all episodes of a series." %}
+            </p>
+            <p style="margin-top: 5px">
+                <strong>{% trans "Cost" %}:</strong>
+                {% if CURRENCY %}
+                    <em class="text-muted">{{ CURRENCY.symbol }} {{ media.download_price|currency:CURRENCY.code|floatformat:CURRENCY.precision|intcomma }}</em>
+                {% else %}
+                    <em class="text-muted">{{ config.currency_symbol }} {{ media.download_price }}</em>
+                {% endif %}
+            </p>
+        {% else %}
+            <a class="btn btn-success btn-block" href="{% url 'movies:bundles' %}">{% trans "Choose a bundle" %}</a>
+            <p class="text-muted" style="font-size: .85em">{% trans "Stream without limitation." %}</p>
+        {% endif %}
     </div>
 {% endif %}
 <div class="clearfix"></div>

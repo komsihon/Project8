@@ -2,8 +2,8 @@
 
 from django.conf.urls import *
 
-from ikwen_shavida.movies.views import stream, TestVideoBytesCounter, Home, MediaList, Checkout, MovieDetail, \
-    get_media, get_recommended_for_single_category, Search, SeriesDetail, Bundles, MoMoCheckout
+from ikwen_shavida.movies.views import stream_or_download, TestVideoBytesCounter, Home, MediaList, Checkout, \
+    MovieDetail, get_media, get_recommended_for_single_category, Search, SeriesDetail, Bundles, MoMoCheckout
 from ikwen_shavida.reporting.views import debit_vod_balance
 
 __author__ = "Kom Sihon"
@@ -22,7 +22,7 @@ urlpatterns = patterns(
     url(r'^series/$', SeriesDetail.as_view(), name='series_detail'),
     url(r'^series/(?P<slug>[-\w]+)/$', SeriesDetail.as_view(), name='series_detail'),
     url(r'^search$', Search.as_view(), name='search'),
-    url(r'^stream/$', stream, name='stream'),
+    url(r'^stream/$', stream_or_download, name='stream_or_download'),
     url(r'^debit_vod_balance$', debit_vod_balance, name='debit_vod_balance'),
     url(r'^testVideoBytesCounter/$', TestVideoBytesCounter.as_view()),
 )

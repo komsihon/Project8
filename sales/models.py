@@ -251,6 +251,7 @@ class UnitPrepayment(Prepayment):
     expiry = models.DateTimeField(blank=True, null=True)
     teller = models.ForeignKey(Member, blank=True, null=True, related_name='cashier',
                                help_text=_("Staff who actually confirmed this Prepayment."))
+    download_link = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         verbose_name = "Single Item Payment"

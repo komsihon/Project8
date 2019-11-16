@@ -8,12 +8,25 @@
     <div class="swiper-slide ghost"></div>
     <div class="swiper-slide content">
         <div class="main-actions{% if settings.IS_CONTENT_VENDOR %} order{% endif %}">
-            <div class="container">
-                {% if media.trailer_resource %}
-                    <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ media.id }}" title="{% trans "Watch trailer" %}">
-                        <i class="glyphicon glyphicon-eye-open"></i> {% trans "Trailer" %}
-                    </button>
+            <div class="container row">
+                <div class="col-xs-4">
+                    {% if media.trailer_resource %}
+                        <button class="btn btn-sm play-trailer" data-type="trailer" data-id="{{ media.id }}" title="{% trans "Watch trailer" %}">
+                            <i class="glyphicon glyphicon-eye-open"></i> {% trans "Trailer" %}
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="col-xs-4">
+                {% if not media.season and media.download_price %}
+                    {% if settings.IS_VOD_OPERATOR %}
+                        <button id="{{ media.id }}" class='btn btn-sm download{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Download movie" %}"
+                                data-id="{{ media.id }}" data-is_adult="{{ media.is_adult }}" data-type="movie">
+                            <i class="glyphicon glyphicon-cloud-download"></i> {% trans "Download" %}
+                        </button>
+                    {% endif %}
                 {% endif %}
+                </div>
+                <div class="col-xs-4">
                 {% if not media.season %}
                     {% if settings.IS_VOD_OPERATOR %}
                         <button id="{{ media.id }}" class='btn btn-sm play-media{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Watch streaming" %}"
@@ -28,6 +41,7 @@
                         </button>
                     {% endif %}
                 {% endif %}
+                </div>
             </div>
         </div>
         <div>

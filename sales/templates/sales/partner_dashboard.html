@@ -1,0 +1,130 @@
+{% extends "core/app_base_admin.html" %}
+{% load i18n humanize staticfiles admin_list static cache %}
+
+{% block page_title %}<title>{% trans "Your daras" %} - ikwen</title>{% endblock %}
+
+{% block head_style %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'daraja/css/daraja-admin.css' %}">
+    <style>
+        #admin-tools .btn.add {display: none}
+        #wallet {border-bottom: 1px solid #eee; padding: 15px 30px}
+        .object-list .btn {width: 90px}
+        @media (max-width: 767px) {
+            #wallet {text-align: center}
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb_location %}
+    <li>{{ verbose_name_plural|capfirst }}</li>
+{% endblock %}
+
+{% block admin_content %}
+    <div id="admin-content">
+        <div class="container-fluid stage">
+            <div class="col-sm-8 col-sm-offset-2">
+                <div id="wallet">
+                    <p class="text-muted">{% trans "Your balance" %}</p>
+                    <h2>{{ config.currency_symbol }} {{ partner_wallet.balance|intcomma }}</h2>
+                </div>
+            </div>
+            <div id="results">
+                {% if movie_list %}
+                    <ul class="object-list" style="padding-left: 0">
+                        {% for movie in movie_list %}
+                            <li id="{{ movie.id }}" class="ik-li list-group-item" data-id="{{ movie.id }}">
+                                {% if movie.poster.name %}
+                                    <div class="image rounded" style="background-image: url({% get_media_prefix %}{{ movie.poster.small_name }})"></div>
+                                {% else %}
+                                    <div class="image rounded" style="background-image: url({% static 'ikwen/img/logo-placeholder.jpg' %})"></div>
+                                {% endif %}
+                                <div class="info">
+                                    <strong>{{ movie.title }}</strong>
+                                    <p class="about">
+                                        {{ config.currency_symbol }} {{ movie.current_earnings|intcomma }}
+                                    </p>
+                                </div>
+                                {% if user.is_superuser %}
+                                <button class="btn btn-sm btn-success pull-right pay"
+                                        data-owners="{% for m in movie.owner_list %}{{ m.full_name }}:{{ m.id }},{% endfor %}">{% trans "Pay" %}</button>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div id="page-navigation" class="text-muted">
+                        <p>{% blocktrans with count=movie_list|length %}{{ count }} results{% endblocktrans %}</p>
+                    </div>
+                {% else %}
+                    <div id="stage" class="empty-list" style="padding: 5vh 15px">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="share-dialog" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-info">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans "Share" %}</h4>
+                </div>
+                <div class="modal-body">
+                    <form onclick="return false" class="form-horizontal">
+                        <div class="form-group row tpl">
+                            <label class="col-sm-5 col-md-4"></label>
+                            <div class="col-sm-7 col-md-8">
+                                <input class="form-control input-sm" type="number" placeholder="10%"/>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="actions">
+                        <div class="col-xs-12 col-sm-4 col-md-3 pull-right action">
+                            <button class="btn btn-success btn-block btn-sm ok" aria-label="OK">OK</button>
+                            {% include 'core/snippets/spinner.html' %}
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-3 pull-right action">
+                            <button class="btn btn-default btn-block btn-sm"
+                                    data-dismiss="modal" aria-label="Close">{% trans "Cancel" %}</button>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        (() => {
+            $('div#admin-nav .partner-dashboard').addClass('active');
+            $('.object-list .ik-li').on('click', '.btn.pay', (e) => {
+                $('#share-dialog .form-group:not(.tpl)').remove();
+                let owners = $(e.target).data('owners').split(',');
+                for (let i=0; i<owners.length; i++) {
+                    let tokens = owners[i];
+                    if (!tokens) continue;
+                    tokens = owners[i].split(':');
+                    let $inputGroup = $('#share-dialog .form-group.tpl').clone().removeClass('tpl');
+                    $inputGroup.find('label').data('id', tokens[1]).text(tokens[0]);
+                    $inputGroup.insertBefore('#share-dialog .form-group.tpl')
+                }
+                $('#share-dialog').modal('show');
+            });
+            $('div#share-dialog .btn.ok').on('click', '#whatsapp-share .btn.ok', () => {
+                let shares = [];
+                $('#share-dialog .form-group:not(.tpl)').each(function() {
+                    let partnerId = $(this).find('label').data('id'),
+                        share = $(this).find('input').val();
+                    shares.push(`${partnerId}:${share}`);
+                });
+                shares = shares.join(',')
+                $.getJSON('', {action: 'share_revenue', shares: shares}, function(resp) {
+                    ikwen.showFloatingNotice(resp.message)
+                })
+            });
+        })()
+    </script>
+{% endblock %}

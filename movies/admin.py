@@ -307,8 +307,9 @@ if getattr(settings, 'IS_GAME_VENDOR', False):
     _base_fields = ('title', 'slug', 'release', 'synopsis', 'poster')
     _meta = ('visible', 'price', 'trailer_resource', 'groups', 'tags')
 elif getattr(settings, 'IS_VOD_OPERATOR', False):
-    _list_display = ('title', 'size', 'duration', 'view_price', 'clicks', 'resource', 'visible')
-    _meta = ('visible', 'is_adult', 'resource', 'resource_mob', 'view_price', 'trailer_resource', 'groups', 'tags', )
+    _list_display = ('title', 'size', 'duration', 'view_price', 'download_price', 'clicks', 'resource', 'visible')
+    _meta = ('visible', 'is_adult', 'resource', 'resource_mob', 'view_price', 'download_price',
+             'trailer_resource', 'groups', 'tags', 'current_earnings')
 else:
     _list_display = ('title', 'size', 'duration', 'price', 'orders', 'resource', 'visible')
     _meta = ('visible', 'is_adult', 'resource', 'price', 'trailer_resource', 'groups', 'tags', )
@@ -347,6 +348,11 @@ class MovieAdmin(ImportExportMixin, admin.ModelAdmin):
                 if category.is_adult:
                     is_adult = True
         obj.is_adult = is_adult
+        owners = request.POST.get('owners')
+        if owners:
+            owner_fk_list = [pk.strip() for pk in owners.split(',')]
+            obj.owner_fk_list = owner_fk_list
+            obj.save()
         super(MovieAdmin, self).save_model(request, obj, form, change)
 
     def get_search_results(self, request, queryset, search_term):
@@ -355,6 +361,7 @@ class MovieAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         context['categories'] = Category.objects.all()
+        context['owner_fk_list'] = ','.join(obj.owner_fk_list)
         return super(MovieAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
 
@@ -383,12 +390,12 @@ class SeriesEpisodeInline(admin.TabularInline):
 
 class SeriesAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = SeriesResource
-    list_display = ('title', 'season', 'clicks', 'display_size', 'display_duration', 'view_price', 'visible') if is_vod_operator()\
+    list_display = ('title', 'season', 'clicks', 'display_size', 'display_duration', 'view_price', 'download_price', 'visible') if is_vod_operator()\
         else ('title', 'season', 'display_duration', 'display_size', 'orders', 'clicks', 'price', 'visible')
     list_filter = (SeriesCategoryListFilter, 'provider', 'visible', 'created_on', )
     fieldsets = (
         (None, {'fields': ('title', 'season', 'slug', 'episodes_count', 'release', 'synopsis', 'poster', )}),
-        ('Meta', {'fields': ('visible', 'is_adult', 'view_price', 'trailer_resource', 'groups', 'tags', ) if is_vod_operator()
+        ('Meta', {'fields': ('visible', 'is_adult', 'view_price', 'download_price', 'trailer_resource', 'groups', 'tags', ) if is_vod_operator()
                             else ('visible', 'is_adult', 'price', 'trailer_resource', 'groups', 'tags', )}),
         ('Important dates', {'fields': ('created_on', 'updated_on',)}),
     )

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 from datetime import datetime
 from random import shuffle
 
@@ -14,15 +15,16 @@ from django.utils.decorators import method_decorator
 from django.utils.module_loading import import_by_path
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import cache_page
-
 from ikwen.accesscontrol.utils import VerifiedEmailTemplateView
 from ikwen_shavida.movies.models import *
 from ikwen_shavida.movies.utils import get_all_recommended, EXCLUDE_LIST_KEYS_KEY, get_recommended_for_category, \
-    get_movies_series_share, is_in_temp_prepayment, render_suggest_payment_template, extract_resource_url
+    get_movies_series_share, get_unit_prepayment, render_suggest_payment_template, extract_resource_url
 from ikwen_shavida.reporting.models import StreamLogEntry
 from ikwen_shavida.sales.models import RetailBundle, VODBundle, VODPrepayment, Prepayment, UnitPrepayment, \
     RetailPrepayment
 from ikwen_shavida.shavida.views import BaseView
+
+logger = logging.getLogger('ikwen')
 
 
 class CustomerView(VerifiedEmailTemplateView):
@@ -397,10 +399,12 @@ def get_media(request, *args, **kwargs):
     )
 
 
-def stream(request, *args, **kwargs):
+def stream_or_download(request, *args, **kwargs):
     # TODO: Handle the reading of multipart files, else only the first part will be streamed
+    service = get_service_instance()
     media_type = request.GET['type']
     item_id = request.GET['item_id']
+    action = request.GET['action']
     referrer = request.META.get('HTTP_REFERER')
     if not referrer:
         return HttpResponseForbidden("You don't have permission to access this resource.")
@@ -432,28 +436,29 @@ def stream(request, *args, **kwargs):
                 StreamLogEntry.objects.create(member=member, media_type=media_type, media_id=item_id, duration=0,
                                               bytes=0)
 
-        if media_type != 'trailer' and media.view_price > 0:
+        if media_type != 'trailer' and (media.view_price > 0 or media.download_price > 0):
             if not member.is_authenticated():
                 response = {"error": _("Please login first.")}
                 return HttpResponse(json.dumps(response), 'content-type: text/json')
             latest_vod_prepayment = member.customer.get_last_vod_prepayment(VODPrepayment.CONFIRMED)
-            if not is_in_temp_prepayment(member, media):
+            unit_prepayment = get_unit_prepayment(member, media)
+            if not unit_prepayment:
                 if not latest_vod_prepayment:
                     response = {
                         "error": _("Sorry, you don't have any valid bundle. Please buy one."),
-                        "html": render_suggest_payment_template(media)
+                        "html": render_suggest_payment_template(request, media)
                     }
                     return HttpResponse(json.dumps(response), 'content-type: text/json')
                 elif latest_vod_prepayment.get_expiry() < datetime.now():
                     response = {
                         "error": _("Sorry, your VOD bundle is expired. Please buy a new one."),
-                        "html": render_suggest_payment_template(media)
+                        "html": render_suggest_payment_template(request, media)
                     }
                     return HttpResponse(json.dumps(response), 'content-type: text/json')
                 elif latest_vod_prepayment.balance <= 0:
                     response = {
                         "error": _("Sorry, your VOD bundle is sold out. Please buy a new one."),
-                        "html": render_suggest_payment_template(media)
+                        "html": render_suggest_payment_template(request, media)
                     }
                     return HttpResponse(json.dumps(response), 'content-type: text/json')
                 if media.is_adult:
@@ -467,6 +472,10 @@ def stream(request, *args, **kwargs):
                         else:
                             response = {"error": _("Sorry, you can't access this content. Please contact your provider.")}
                             return HttpResponse(json.dumps(response), 'content-type: text/json')
+
+            if action == 'download':
+                return HttpResponseRedirect(unit_prepayment.download_link)
+
         item_url = ''
         found = False
         resource_to_use = None
@@ -477,10 +486,14 @@ def stream(request, *args, **kwargs):
             item_url = url_maker(request, folder, media, *args, **kwargs)
             resource_to_use = get_resource_to_use(request, folder, media)
             try:
-                if requests.head(item_url).status_code == 200:
+                status_code = requests.head(item_url).status_code
+                if status_code == 200 or status_code == 302 or status_code == 301:
                     found = True
                     break
+                else:
+                    logger.debug("%s - Could not read video %s. Error code: %s" % (service.project_name, item_url, status_code))
             except:
+                logger.error("%s - Failed to access video %s" % (service.project_name, item_url), exc_info=True)
                 continue
         if is_check:
             if not found:
@@ -494,7 +507,8 @@ def stream(request, *args, **kwargs):
 
         return HttpResponseRedirect(item_url)
     except Exception as e:
-        response = {'error': e.message}
+        response = {'error': "Unknow error occured."}
+        logger.error("%s - Unknow error" % service.project_name, exc_info=True)
         return HttpResponse(json.dumps(response), 'content-type: text/json')
 
 

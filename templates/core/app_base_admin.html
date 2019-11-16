@@ -8,9 +8,20 @@
             <div class="stage">
                 <div class="menu">
                     <ul class="nav nav-pills nav-stacked">
-                        {% if perms.trade.ik_view_dashboard %}
+                        {% if perms.sales.ik_view_dashboard %}
                             <li role="presentation" class="dashboard">
                                 <a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a>
+                            </li>
+                        {% endif %}
+                        {% if perms.sales.ik_access_partner_dashboard %}
+                            <li role="presentation" class="partner-dashboard">
+                                <a href="{% url 'sales:partner_dashboard' %}">
+                                    {% if user.is_superuser %}
+                                        {% trans "Movies report" %}
+                                    {% else %}
+                                        {% trans "Dashboard" %}
+                                    {% endif %}
+                                </a>
                             </li>
                         {% endif %}
                         <li role="presentation" class="data-management">
@@ -76,27 +87,6 @@
                         </ul>
                     {% endif %}
                 </div>
-                {% if filter and filter|length > 0 %}
-                    <ul class="nav nav-pills nav-stacked filter">
-                        {% for elt in filter %}
-                            <li>
-                                <a href="javascript:;" data-toggle="collapse"
-                                   data-target="#{{ elt.parameter_name }}" aria-expanded="true">
-                                    {{ elt.title }} <i class="fa fa-fw fa-caret-down"></i>
-                                </a>
-                                <ul id="#{{ elt.parameter_name }}" data-param="{{ elt.parameter_name }}"
-                                    class="nav nav-pills nav-stacked collapse in choices" aria-expanded="true"
-                                    style="padding-left: 15px">
-                                    {% for choice in elt.choices %}
-                                        <li data-value="{{ choice.0 }}">
-                                            <a href="javascript:;">{{ choice.1 }}</a>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
                 <div class="clear"></div>
             </div>
         </div>

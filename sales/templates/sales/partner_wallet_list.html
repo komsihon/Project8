@@ -1,0 +1,35 @@
+{% extends "core/app_base_admin.html" %}
+{% load i18n humanize staticfiles admin_list %}
+
+{% block page_title %}
+<title> {{ verbose_name_plural|capfirst }} - {{ service.project_name }} </title>
+{% endblock %}
+
+{% block breadcrumb_location %}
+    <li>{{ verbose_name_plural|capfirst }}</li>
+{% endblock %}
+
+{% block admin_content %}
+    <div id="admin-content">
+        <div class="container-fluid stage">
+            {% include 'core/snippets/admin_tools.html' %}
+            <div id="results">
+                {% include html_results_template_name %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    {% if is_sortable %}
+        {% include 'core/snippets/sort_and_actions.html' %}
+    {% endif %}
+    <script type="text/javascript">
+        (function() {
+            var target = '{{ verbose_name_plural|slugify }}' ? '{{ verbose_name_plural|slugify }}' : 'blank';
+            $('div#admin-nav .' + target).addClass('active');
+
+        })()
+    </script>
+{% endblock %}

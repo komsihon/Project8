@@ -5,21 +5,21 @@
         /**************************   VOD HANDLERS    *************************/
         /**********************************************************************/
         var type, id, player, _timerId;
-        $('body').on('click', '.play-media.connect', function() {
+        $('body').on('click', '.play-media.connect, .download-media.connect', function() {
             $('#login-to-continue').modal('show')
-        }).on('click', '.play-media:not(.connect), .play-trailer', function() {
+        }).on('click', '.play-media:not(.connect), .download-media:not(.connect), .play-trailer', function() {
             type = $(this).data('type');
             id = $(this).data('id');
-            var streamEndpoint = '{% url 'movies:stream' %}',
-                size = $(this).data('size'),
+            let streamEndpoint = '{% url 'movies:stream_or_download' %}',
                 $dialogPlayer = $('div#lightbox .dialog.player');
+            let action = $(this).hasClass('play-media') ? 'stream' : 'download';
             if (!type) return true; // No type will generally mean "series", thus his cause the action to take to detail page of the series
             $('div#lightbox .dialog').hide();
             $('#video-stage, div#lightbox .dialog.player .streaming-error').hide();
             $dialogPlayer.addClass('spinner');
             $dialogPlayer.show();
             $('#lightbox').addClass('stream').fadeIn();
-            $.getJSON(streamEndpoint, {is_check: 'yes', item_id: id, type: type}, function(data) {
+            $.getJSON(streamEndpoint, {is_check: 'yes', item_id: id, type: type, action: action}, function(data) {
                 $dialogPlayer.removeClass('spinner');
                 if (data.error) {
                     showStreamError(data);
@@ -101,10 +101,12 @@
             return false
         }).on('click', '.btn.pay-single', function() {
             $('div#lightbox').removeClass('stream').fadeOut();
-            var id = $(this).data('id'),
-                type = $(this).data('type');
+            let id = $(this).data('id'),
+                type = $(this).data('type'),
+                action = $(this).data('action');
             $('#media-id').val(id);
             $('#media-type').val(type);
+            $('#media-action').val(action);
             $('.payment-method.cash').data('action-url', '{% url 'sales:choose_temp_bundle' %}');
             $('#payment-methods').modal('show')
         }).on('click', '#lightbox.stream', function() {

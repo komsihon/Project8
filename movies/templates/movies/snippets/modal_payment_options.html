@@ -11,6 +11,7 @@
                     <input type="hidden" id="bundle-id" name="bundle_id" />
                     <input type="hidden" id="media-id" name="media_id" />
                     <input type="hidden" id="media-type" name="media_type" />
+                    <input type="hidden" id="media-action" name="media_action" />
                     <ul class="row">
                         <li class="col-sm-4 payment-method{% if not config.is_pro_version and not config.allow_cash_payment %} col-sm-offset-2{% endif %}"
                             {% if mtn_momo %}data-action-url="{% url mtn_momo.action_url_name %}"{% endif %}>

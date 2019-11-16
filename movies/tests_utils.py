@@ -9,7 +9,7 @@ from ikwen.accesscontrol.models import Member
 from ikwen_shavida.movies.models import Movie, Series, Category
 from ikwen_shavida.movies.tests_views import wipe_test_data
 from ikwen_shavida.movies.utils import get_recommended_for_category, get_watched_categories, EXCLUDE_LIST_KEYS_KEY, \
-    get_all_recommended, is_in_temp_prepayment, extract_resource_url
+    get_all_recommended, get_unit_prepayment, extract_resource_url
 from ikwen_shavida.reporting.utils import get_watched
 from ikwen_shavida.sales.models import UnitPrepayment, Prepayment
 
@@ -129,7 +129,7 @@ class MoviesUtilsTest(TestCase):
         expiry = datetime.now() + timedelta(days=2)
         UnitPrepayment.objects.create(member=member, media_id=media.id, media_type='movie',
                                       amount=300, duration=2, paid_on=now, expiry=expiry, status=Prepayment.CONFIRMED)
-        self.assertTrue(is_in_temp_prepayment(member, media))
+        self.assertIsNotNone(get_unit_prepayment(member, media))
 
     def test_extract_resource_url(self):
         iframe_code = '<iframe width="560" height="315" src="https://www.youtube.com/embed/nl5dlbCh8lY" frameborder="0" allowfullscreen></iframe>'

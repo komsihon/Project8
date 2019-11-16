@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import time
 from datetime import datetime, timedelta
 
 from currencies.models import Currency
@@ -14,6 +15,7 @@ from django.shortcuts import get_object_or_404
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
+from django.views.generic import TemplateView
 from ikwen.accesscontrol.backends import UMBRELLA
 from ikwen.accesscontrol.models import SUDO, Member
 from ikwen.billing.mtnmomo.views import MTN_MOMO
@@ -22,17 +24,19 @@ from ikwen.conf.settings import FALLBACK_SHARE_RATE
 from ikwen.core.models import Service
 from ikwen.core.utils import get_service_instance, add_database_to_settings, set_counters, increment_history_field, \
     add_event, calculate_watch_info, rank_watch_objects, slice_watch_objects
-from ikwen.core.views import DashboardBase
+from ikwen.core.views import DashboardBase, HybridListView
 from ikwen.partnership.models import ApplicationRetailConfig
 from ikwen_shavida.movies.models import Movie, Series
 from ikwen_shavida.movies.views import CustomerView
-from ikwen_shavida.reporting.utils import generate_add_list_info, add_media_to_update, sync_changes
+from ikwen_shavida.movies.utils import generate_download_link
+from ikwen_shavida.reporting.utils import generate_add_list_info, add_media_to_update
 from ikwen_shavida.sales.models import ContentUpdate
 from ikwen_shavida.sales.models import VODBundle, Prepayment, VODPrepayment, RetailBundle, RetailPrepayment, UnitPrepayment, \
     SalesConfig
 from ikwen_shavida.shavida.events import NEW_ORDER, BUNDLE_PURCHASE
-from ikwen_shavida.shavida.models import Customer
+from ikwen_shavida.shavida.models import Customer, PartnerWallet
 from math import ceil
+
 
 
 def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
@@ -45,6 +49,7 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
     bundle_id = request.POST.get('bundle_id')
     media_id = request.POST.get('media_id')
     media_type = request.POST.get('media_type')
+    action = request.POST.get('action')
     currency = Currency.active.base()
     if bundle_id:
         if getattr(settings, 'IS_VOD_OPERATOR', False):
@@ -70,12 +75,13 @@ def set_momo_order_checkout(request, payment_mean, *args, **kwargs):
             media = get_object_or_404(Series, pk=media_id)
             request.session['media_type'] = 'series'
             hashbang = 'series-' + media.slug
+        amount = media.download_price if action == 'download' else media.view_price
         config = service.config
         duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
         prepayment = UnitPrepayment.objects.create(media_type=media_type, media_id=media_id,  member=member,
-                                                   amount=media.view_price, duration=duration, currency=currency,
+                                                   amount=amount, duration=duration, currency=currency,
                                                    payment_mean=payment_mean)
-        request.session['amount'] = media.view_price
+        request.session['amount'] = amount
         request.session['model_name'] = 'sales.UnitPrepayment'
         request.session['is_unit_prepayment'] = True
     request.session['object_id'] = prepayment.id
@@ -187,33 +193,15 @@ def choose_retail_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
+        share_payment_and_set_stats(member.customer, prepayment)
 
     messages.success(request, _("Your bundle was successfully activated."))
 
 
 @login_required
 def choose_temp_bundle(request, *args, **kwargs):
-    config = get_service_instance().config
     member = request.user
-    pay_cash = False
-    if config.allow_cash_payment:
-        pay_cash = request.POST.get('pay_cash') == 'yes'
-
-    if pay_cash:
-        media_id = request.POST.get('media_id')
-        try:
-            media = Movie.objects.get(pk=media_id)
-            amount = media.view_price
-            media_type = 'movie'
-        except Movie.DoesNotExist:
-            media = get_object_or_404(Series, pk=media_id)
-            amount = media.view_price
-            media_type = 'series'
-        duration = config.movies_timeout if media_type == UnitPrepayment.MOVIE else config.series_timeout
-        UnitPrepayment.objects.create(member=member, media_type=media_type, media_id=media_id,
-                                      amount=amount, duration=duration)
-    elif kwargs.get('payment_successful', False):
+    if kwargs.get('payment_successful', False):
         object_id = request.session.get('object_id')
         if not object_id:
             object_id = kwargs['object_id']
@@ -227,13 +215,22 @@ def choose_temp_bundle(request, *args, **kwargs):
         service = get_service_instance()
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
-        add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
+        add_event(service, BUNDLE_PURCHASE, member=member, object_id=prepayment.id)
+        if type(prepayment) == UnitPrepayment:
+            media = prepayment.get_media()
+            timeout = getattr(settings, 'SECURE_LINK_TIMEOUT', 90)
+            expires = int(time.time()) + timeout * 60
+            if prepayment.amount == media.download_price:
+                prepayment.download_link = generate_download_link(media.filename, expires)
+                prepayment.save()
+        share_payment_and_set_stats(member.customer, prepayment)
 
     messages.success(request, _("Your bundle was successfully activated."))
 
 
-def share_payment_and_set_stats(customer, amount, payment_mean):
+def share_payment_and_set_stats(customer, prepayment):
+    amount = prepayment.amount
+    payment_mean = prepayment.payment_mean
     service = get_service_instance()
     service_umbrella = get_service_instance(UMBRELLA)
     app_umbrella = service_umbrella.app
@@ -304,6 +301,16 @@ def share_payment_and_set_stats(customer, amount, payment_mean):
     customer.last_payment_on = datetime.now()
     increment_history_field(customer, 'turnover_history', amount)
     increment_history_field(customer, 'orders_count_history')
+
+    if type(prepayment) == UnitPrepayment:
+        media = prepayment.get_media()
+        media.current_earnings += operator_earnings
+        set_counters(media)
+        increment_history_field(media, 'earnings_history', operator_earnings)
+        if amount == media.download_price:
+            increment_history_field(media, 'download_history')
+        else:
+            increment_history_field(media, 'count_history')
 
 
 @login_required
@@ -520,3 +527,66 @@ class Dashboard(DashboardBase):
         context['orders_report'] = orders_report
         context['customers_report'] = customers_report
         return context
+
+
+class PartnerDashboard(TemplateView):
+    template_name = 'sales/partner_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartnerDashboard, self).get_context_data(**kwargs)
+        member = self.request.user
+        service = get_service_instance()
+        partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member.id)
+        movie_list = Movie.objects.raw_query({'owner_fk_list': {'$elemMatch': {'$eq': member.id}}}).order_by('-id')
+        series_list = Series.objects.raw_query({'owner_fk_list': {'$elemMatch': {'$eq': member.id}}}).order_by('-id')
+        # movie_list = Movie.objects.all()[:10]
+        context['movie_list'] = movie_list
+        context['series_list'] = series_list
+        context['partner_wallet'] = partner_wallet
+        return context
+
+    def get(self, request, *args, **kwargs):
+        action = request.GET.get('action')
+        if action == 'share_revenue':
+            return self.share_revenue(request)
+        return super(PartnerDashboard, self).get(request, *args, **kwargs)
+
+    def share_revenue(self, request):
+        if not request.user.is_superuser:
+            return HttpResponse("Not allowed")
+        service = get_service_instance()
+        share_list = request.GET['shares'].split(',')
+        media_id = request.GET['media_id']
+        movie = Movie.objects.get(pk=media_id)
+        current_earnings = movie.current_earnings
+        movie.current_earnings = 0
+        movie.save()
+        for share in share_list:
+            tokens = share.split(':')
+            member = Member.objects.get(pk=tokens[0])
+            earnings = current_earnings * float(tokens[1]) / 100
+            partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member.id)
+            partner_wallet.balance += int(earnings)
+            partner_wallet.save()
+
+
+class PartnerWalletList(HybridListView):
+    template_name = 'sales/partner_wallet_list.html'
+    html_results_template_name = 'sales/snippets/partner_wallet_list_results.html'
+
+    def get_queryset(self):
+        service = get_service_instance()
+        return PartnerWallet.objects.using('shavida_wallets').filter(service_id=service.id)
+
+    def get(self, request, *args, **kwargs):
+        action = request.GET.get('action')
+        if action == 'clear':
+            return self.clear(request)
+        return super(PartnerWalletList, self).get(request, *args, **kwargs)
+
+    def clear(self, request):
+        service = get_service_instance()
+        member_id = request.GET['member_id']
+        partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member_id)
+        partner_wallet.balance = 0
+        partner_wallet.save()

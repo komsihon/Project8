@@ -5,10 +5,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from djangotoolbox.fields import ListField
 from ikwen.accesscontrol.models import Member
-from ikwen.core.models import AbstractConfig, AbstractWatchModel, Service
+from ikwen.core.models import AbstractConfig, AbstractWatchModel, Service, Model
 from ikwen.core.utils import to_dict, add_database_to_settings
 from ikwen.theming.models import Theme
-from ikwen_shavida.conf.utils import is_content_vendor
 from ikwen_shavida.sales.models import ContentUpdate, SalesConfig, RetailPrepayment, VODPrepayment
 
 
@@ -98,6 +97,10 @@ class Customer(AbstractWatchModel):
 
 class OperatorProfile(AbstractConfig):
     theme = models.ForeignKey(Theme, blank=True, null=True, related_name='+')
+    allow_bundle_prepayment = models.BooleanField(default=True,
+                                                  help_text=_("Check if you want customers to pay for a bundles "
+                                                              "that give unlimited access to whatever series or movie. "
+                                                              "You will have to configure those bundles in."))
     allow_unit_prepayment = models.BooleanField(default=True,
                                                 help_text=_("Check if you want customers to pay for a single movie or "
                                                             "series. Then you will have to set <em>View price</em> "
@@ -134,11 +137,7 @@ class OperatorProfile(AbstractConfig):
         verbose_name = 'Operator'
 
     def save(self, *args, **kwargs):
-        using = kwargs.get('using')
-        if using:
-            del(kwargs['using'])
-        else:
-            using = 'default'
+        using = kwargs.pop('using', 'default')
         if getattr(settings, 'IS_IKWEN', False):
             db = self.service.database
             add_database_to_settings(db)
@@ -157,6 +156,21 @@ class OperatorProfile(AbstractConfig):
         super(OperatorProfile, self).save(using=using, *args, **kwargs)
 
 
-class SubscriptionWatch(AbstractWatchModel):
-    count_history = ListField()
-    total_count = models.IntegerField(default=0)
+class PartnerWallet(Model):
+    service_id = models.CharField(max_length=24)
+    member_id = models.CharField(max_length=24)
+    balance = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return Member.objects.get(pk=self.member_id)
+
+    def raise_balance(self, amount):
+        self.balance += amount
+        self.save()
+
+    def lower_balance(self, amount):
+        self.balance -= amount
+        self.save()
+
+    def get_obj_details(self):
+        return self.balance

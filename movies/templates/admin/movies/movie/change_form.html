@@ -7,12 +7,21 @@
         <ul style="float: left; margin-left: 0; padding: 6px 0 0 15px">
             {% for category in categories %}
                 <li style="display: block; float: left; padding: 3px 0; width: 200px">
-                    <input type="checkbox" id="category-{{ category.slug }}" name="cat_{{ category.id }}"
-                        {% if category in original.categories %}checked{% endif %}
-                    />
+                    <input type="checkbox" id="category-{{ category.slug }}"
+                           name="cat_{{ category.id }}"{% if category in original.categories %} checked{% endif %}/>
                     <label for="category-{{ category.slug }}">{{ category.title }}</label>
                 </li>
             {% endfor %}
         </ul>
+    </fieldset>
+    <fieldset class="module aligned {{ fieldset.classes }}">
+        <h2>{% trans "Owners" %}</h2>
+        <div class="form-row field-groups">
+            <div>
+                <label for="id_owners">Owners:</label>
+                <input class="vTextField" id="id_owners" name="owners" type="text" value="{{ owner_fk_list }}">
+                <p class="help">IDs of partners separated by comma.</p>
+            </div>
+        </div>
     </fieldset>
 {% endblock %}
