@@ -162,7 +162,11 @@ class PartnerWallet(Model):
     balance = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return Member.objects.get(pk=self.member_id)
+        try:
+            member = Member.objects.get(pk=self.member_id)
+            return member.full_name
+        except:
+            return ''
 
     def raise_balance(self, amount):
         self.balance += amount

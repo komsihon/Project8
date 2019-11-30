@@ -257,7 +257,7 @@ class UnitPrepayment(Prepayment):
         verbose_name = "Single Item Payment"
         verbose_name_plural = "Single Item Payments"
 
-    def get_media(self):
+    def get_media_title(self):
         from ikwen_shavida.movies.models import Movie, Series
         try:
             if self.media_type == 'movie':
@@ -266,4 +266,13 @@ class UnitPrepayment(Prepayment):
             return _(u"%s season %d" % (series.title, series.season))
         except ObjectDoesNotExist:
             return _('N/A: Media deleted')
-    get_media.short_description = 'Media'
+    get_media_title.short_description = 'Media'
+
+    def get_media(self):
+        from ikwen_shavida.movies.models import Movie, Series
+        try:
+            if self.media_type == 'movie':
+                return Movie.objects.get(pk=self.media_id)
+            return Series.objects.get(pk=self.media_id)
+        except ObjectDoesNotExist:
+            pass

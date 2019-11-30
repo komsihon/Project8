@@ -122,17 +122,11 @@ class Media(AbstractWatchModel, MediaInterface):
     clicks = models.PositiveIntegerField(default=0,
                                          help_text=_("Number of times movie was clicked for streaming. Can be considered "
                                                      "as the number of view in a certain way."))
+    filename = models.CharField(max_length=255, blank=True, null=True,
+                                help_text=_("Filename of the media."))
 
     class Meta:
         abstract = True
-
-    def _get_filename(self):
-        return self.resource
-
-    def _set_filename(self, value):
-        self.__dict__['resource'] = value
-
-    filename = property(_get_filename, _set_filename)
 
 
 class Trailer(Media):
@@ -284,6 +278,7 @@ class Movie(Media):
         var['display_clicks'] = self.display_clicks
         var['load'] = self.load
         var['display_load'] = self.display_load
+        del(var['filename'])
         del(var['resource'])
         del(var['resource_mob'])
         del(var['synopsis'])
@@ -555,6 +550,7 @@ class SeriesEpisode(Media):
         var['orders'] = 'fake_orders'
         var['clicks'] = 'fake_clicks'
         var['load'] = self.load
+        del(var['filename'])
         del(var['resource'])
         del(var['resource_mob'])
         del(var['fake_orders'])

@@ -29,7 +29,16 @@
         (function() {
             var target = '{{ verbose_name_plural|slugify }}' ? '{{ verbose_name_plural|slugify }}' : 'blank';
             $('div#admin-nav .' + target).addClass('active');
-
+            $('body').on('click', '.clear-wallet', function() {
+                let $wallet = $(this).parents('.ik-li'),
+                    walletId = $wallet.data('id');
+                $.getJSON('', {action: 'clear_wallet', wallet_id: walletId}, function(resp) {
+                    if (resp.success) {
+                        $wallet.find('.wallet-balance').text(0);
+                        ikwen.showFloatingNotice("Wallet cleared");
+                    }
+                })
+            })
         })()
     </script>
 {% endblock %}

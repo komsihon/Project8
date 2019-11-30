@@ -308,7 +308,7 @@ if getattr(settings, 'IS_GAME_VENDOR', False):
     _meta = ('visible', 'price', 'trailer_resource', 'groups', 'tags')
 elif getattr(settings, 'IS_VOD_OPERATOR', False):
     _list_display = ('title', 'size', 'duration', 'view_price', 'download_price', 'clicks', 'resource', 'visible')
-    _meta = ('visible', 'is_adult', 'resource', 'resource_mob', 'view_price', 'download_price',
+    _meta = ('visible', 'is_adult', 'resource', 'resource_mob', 'filename', 'view_price', 'download_price',
              'trailer_resource', 'groups', 'tags', 'current_earnings')
 else:
     _list_display = ('title', 'size', 'duration', 'price', 'orders', 'resource', 'visible')
@@ -327,7 +327,7 @@ class MovieAdmin(ImportExportMixin, admin.ModelAdmin):
     ordering = ('-id', '-title', '-release', '-clicks', '-orders')
     search_fields = ('title', 'resource', )
     readonly_fields = ('created_on', 'updated_on', 'provider') if getattr(settings, 'IS_GAME_VENDOR', False)\
-        else ('is_adult', 'created_on', 'updated_on', 'provider')
+        else ('is_adult', 'created_on', 'updated_on', 'provider', 'current_earnings')
     save_on_top = True
     prepopulated_fields = {"slug": ("title",), "tags": ("title",), "groups": ("title",)}
     # actions = [add_movies_to_top20, remove_movies_from_top20]
@@ -361,7 +361,7 @@ class MovieAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         context['categories'] = Category.objects.all()
-        context['owner_fk_list'] = ','.join(obj.owner_fk_list)
+        context['owner_fk_list'] = ','.join(obj.owner_fk_list) if obj else ''
         return super(MovieAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
 

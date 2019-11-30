@@ -4,13 +4,12 @@
     {% for obj in objects_page.object_list %}
     <li class="ik-li list-group-item {{ obj.status }}" id="{{ obj.id }}" data-id="{{ obj.id }}">
         <div>{{ obj }}</div>
-        {% with obj_details=obj.get_obj_details %}
-            {% if obj_details %}
-                <div class="text-muted">{{ obj_details }}</div>
-            {% endif %}
-        {% endwith %}
+        <div>
+            <span class="text-muted">{{ config.currency_symbol }}</span>
+            <span class="wallet-balance">{{ obj.balance }}</span>
+        </div>
         <div class="actions">
-            <i class="glyphicon glyphicon-repeat action-icon" data-action="clear" title="{% trans "Clear" %}"></i>
+            <i class="glyphicon glyphicon-repeat action-icon clear-wallet" data-action="clear" title="{% trans "Clear" %}"></i>
         </div>
     </li>
     {% endfor %}

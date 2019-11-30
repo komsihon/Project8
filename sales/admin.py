@@ -148,10 +148,10 @@ class VODPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
 
 class UnitPrepaymentAdmin(ExportMixin, admin.ModelAdmin):
     if allow_cash_payment:
-        list_display = ('member', 'get_media', 'amount', 'created_on', 'paid_on', 'teller', 'status')
+        list_display = ('member', 'get_media_title', 'amount', 'created_on', 'paid_on', 'teller', 'status')
         list_filter = ('created_on', 'amount', 'status', )
     else:
-        list_display = ('member', 'get_media', 'paid_on', 'amount', 'duration')
+        list_display = ('member', 'get_media_title', 'paid_on', 'amount', 'duration')
         list_filter = ('paid_on', 'amount', )
     search_fields = ('member_email', 'member_phone',)
     readonly_fields = ('member', 'amount', 'duration', 'teller',

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import functools
 import json
 import time
 from datetime import datetime, timedelta
@@ -152,7 +153,7 @@ def choose_vod_bundle(request, *args, **kwargs):
         sudo_group = Group.objects.get(name=SUDO)
         add_event(service, BUNDLE_PURCHASE, group_id=sudo_group.id, object_id=prepayment.id)
         add_event(service, BUNDLE_PURCHASE, member=request.user, object_id=prepayment.id)
-        share_payment_and_set_stats(member.customer, prepayment.amount, prepayment.payment_mean)
+        share_payment_and_set_stats(member.customer, prepayment)
 
     messages.success(request, _("Your bundle was successfully activated."))
 
@@ -537,11 +538,18 @@ class PartnerDashboard(TemplateView):
         member = self.request.user
         service = get_service_instance()
         partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member.id)
-        movie_list = Movie.objects.raw_query({'owner_fk_list': {'$elemMatch': {'$eq': member.id}}}).order_by('-id')
+        if member.is_superuser:
+            movie_list = []
+            for movie in Movie.objects.all():
+                if movie.owner_fk_list:
+                    movie_list.append(movie)
+        else:
+            movie_list = Movie.objects.raw_query({'owner_fk_list': {'$elemMatch': {'$eq': member.id}}}).order_by('-id')
         series_list = Series.objects.raw_query({'owner_fk_list': {'$elemMatch': {'$eq': member.id}}}).order_by('-id')
         # movie_list = Movie.objects.all()[:10]
         context['movie_list'] = movie_list
         context['series_list'] = series_list
+        context['media_total'] = sum([m.current_earnings for m in movie_list])
         context['partner_wallet'] = partner_wallet
         return context
 
@@ -563,11 +571,13 @@ class PartnerDashboard(TemplateView):
         movie.save()
         for share in share_list:
             tokens = share.split(':')
-            member = Member.objects.get(pk=tokens[0])
+            member_id = tokens[0]
             earnings = current_earnings * float(tokens[1]) / 100
-            partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member.id)
+            partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member_id)
             partner_wallet.balance += int(earnings)
             partner_wallet.save()
+        response = {"message": _("Share successfully run")}
+        return HttpResponse(json.dumps(response), content_type='application/json')
 
 
 class PartnerWalletList(HybridListView):
@@ -580,13 +590,12 @@ class PartnerWalletList(HybridListView):
 
     def get(self, request, *args, **kwargs):
         action = request.GET.get('action')
-        if action == 'clear':
-            return self.clear(request)
+        if action == 'clear_wallet':
+            return self.clear_wallet(request)
         return super(PartnerWalletList, self).get(request, *args, **kwargs)
 
-    def clear(self, request):
-        service = get_service_instance()
-        member_id = request.GET['member_id']
-        partner_wallet, update = PartnerWallet.objects.using('shavida_wallets').get_or_create(service_id=service.id, member_id=member_id)
-        partner_wallet.balance = 0
-        partner_wallet.save()
+    def clear_wallet(self, request):
+        wallet_id = request.GET['wallet_id']
+        PartnerWallet.objects.using('shavida_wallets').filter(pk=wallet_id).update(balance=0)
+        response = {"success": True}
+        return HttpResponse(json.dumps(response), content_type='application/json')

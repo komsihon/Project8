@@ -24,10 +24,16 @@
                                 </a>
                             </li>
                         {% endif %}
-                        <li role="presentation" class="data-management">
-                            <a href="{% url 'admin:index' %}">{% trans "Data Management" %}</a>
-                        </li>
+                        {% if perms.accesscontrol.sudo %}
+                            <li role="presentation" class="data-management">
+                                <a href="{% url 'admin:index' %}">{% trans "Data Management" %}</a>
+                            </li>
+                            <li role="presentation" class="data-management">
+                                <a href="{% url 'sales:partner_wallet_list' %}">{% trans "Partner wallets" %}</a>
+                            </li>
+                        {% endif %}
                     </ul>
+                    {% if perms.echo.ik_manage_messaging %}
                     <div class="divider"></div>
                     <ul class="nav nav-pills nav-stacked">
                         <li role="presentation" class="menus">
@@ -45,6 +51,7 @@
                             </ul>
                         </li>
                     </ul>
+                    {% endif %}
                     {% if perms.accesscontrol.sudo %}
                         <div class="divider"></div>
                         <ul class="nav nav-pills nav-stacked">

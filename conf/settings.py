@@ -126,7 +126,11 @@ DATABASES = {
         'ENGINE': 'django_mongodb_engine',
         'NAME': 'ikwen_umbrella',
     },
-    'wallets': WALLETS_DB
+    'wallets': WALLETS_DB,
+    'shavida_wallets': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/home/komsihon/Dropbox/PycharmProjects/Shavida/db.sqlite3',
+    }
 }
 
 # Internationalization
