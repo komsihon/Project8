@@ -19,7 +19,7 @@
                 <div class="col-xs-4">
                 {% if not media.season and media.download_price %}
                     {% if settings.IS_VOD_OPERATOR %}
-                        <button id="{{ media.id }}" class='btn btn-sm download{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Download movie" %}"
+                        <button id="{{ media.id }}" class='btn btn-sm btn-warning download{% if user.is_anonymous %} connect{% endif %}' title="{% trans "Download movie" %}"
                                 data-id="{{ media.id }}" data-is_adult="{{ media.is_adult }}" data-type="movie">
                             <i class="glyphicon glyphicon-cloud-download"></i> {% trans "Download" %}
                         </button>

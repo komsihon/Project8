@@ -1,7 +1,7 @@
 {% extends "core/app_base_admin.html" %}
 {% load i18n humanize staticfiles admin_list static cache %}
 
-{% block page_title %}<title>{% trans "Your daras" %} - ikwen</title>{% endblock %}
+{% block page_title %}<title>{% trans "Movies report" %} - ikwen</title>{% endblock %}
 
 {% block head_style %}
     {{ block.super }}
@@ -47,7 +47,7 @@
                 {% if movie_list %}
                     <ul class="object-list" style="padding-left: 0">
                         {% for movie in movie_list %}
-                            <li id="{{ movie.id }}" class="ik-li list-group-item" data-id="{{ movie.id }}">
+                            <li id="{{ movie.id }}" class="ik-li list-group-item" data-id="{{ movie.id }}" data-title="{{ movie.title }}">
                                 {% if movie.poster.name %}
                                     <div class="image rounded" style="background-image: url({% get_media_prefix %}{{ movie.poster.small_name }})"></div>
                                 {% else %}
@@ -81,7 +81,7 @@
             <div class="modal-content modal-info">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">{% trans "Share" %}</h4>
+                    <h4 class="modal-title">{% trans "Share" %} <span class="media-title"></span></h4>
                 </div>
                 <div class="modal-body">
                     <form onclick="return false" class="form-horizontal">
@@ -114,9 +114,13 @@
     <script>
         (() => {
             $('div#admin-nav .partner-dashboard').addClass('active');
+            let $media;
             $('.object-list .ik-li').on('click', '.btn.pay', (e) => {
                 $('#share-dialog .form-group:not(.tpl)').remove();
-                let owners = $(e.target).data('owners').split(',');
+                $media = $(e.target).parents('.ik-li');
+                let title = $media.data('title'),
+                    owners = $(e.target).data('owners').split(',');
+                $('div#share-dialog .media-title').text(title);
                 for (let i=0; i<owners.length; i++) {
                     let tokens = owners[i];
                     if (!tokens) continue;
@@ -127,7 +131,7 @@
                 }
                 $('#share-dialog').modal('show');
             });
-            $('div#share-dialog .btn.ok').on('click', '#whatsapp-share .btn.ok', () => {
+            $('div#share-dialog .btn.ok').click((e) => {
                 let shares = [];
                 $('#share-dialog .form-group:not(.tpl)').each(function() {
                     let partnerId = $(this).find('label').data('id'),
@@ -135,8 +139,10 @@
                     shares.push(`${partnerId}:${share}`);
                 });
                 shares = shares.join(',');
-                $.getJSON('', {action: 'share_revenue', shares: shares}, function(resp) {
-                    ikwen.showFloatingNotice(resp.message)
+                $.getJSON('', {action: 'share_revenue', shares: shares, media_id: $media.data('id')}, function(resp) {
+                    $('#share-dialog').modal('hide');
+                    $media.find('.about').text('{{ config.currency_symbol }} 0');
+                    ikwen.showFloatingNotice(resp.message);
                 })
             });
         })()
