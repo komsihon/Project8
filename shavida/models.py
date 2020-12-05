@@ -15,7 +15,7 @@ class Customer(AbstractWatchModel):
     """
     Customer profile
     """
-    member = models.OneToOneField(Member)
+    member = models.OneToOneField(Member, related_name='as_customer')
     # User must activate this from his profile to access adult content
     adult_authorized = models.BooleanField(default=False, editable=False)
     service = models.ForeignKey(Service, blank=True, null=True, related_name='+',
@@ -120,10 +120,6 @@ class OperatorProfile(AbstractConfig):
                                            "data. URL of an image of an image on a retailer website will be obtained "
                                            "by replacing the current media root with the one of the provider of the "
                                            "product.")
-    ikwen_share_rate = models.FloatField(_("ikwen share rate"), default=0,
-                                         help_text=_("Percentage ikwen collects on the turnover made by this person."))
-    ikwen_share_fixed = models.FloatField(_("ikwen share fixed"), default=0,
-                                          help_text=_("Fixed amount ikwen collects on the turnover made by this person."))
     max_products = models.FloatField(default=0,
                                      help_text=_("Maximum number of media in the library."))
     guard_image_landscape = models.ImageField(upload_to='guard_images', blank=True, null=True,
@@ -150,6 +146,7 @@ class OperatorProfile(AbstractConfig):
                 obj_mirror.is_pro_version = self.is_pro_version
                 obj_mirror.max_products = self.max_products
                 obj_mirror.cash_out_min = self.cash_out_min
+                obj_mirror.cash_out_rate = self.cash_out_rate
                 super(OperatorProfile, obj_mirror).save(using=db)
             except OperatorProfile.DoesNotExist:
                 pass

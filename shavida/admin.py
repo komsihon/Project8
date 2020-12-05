@@ -35,7 +35,7 @@ else:
         (_('Address & Contact'), {'fields': ('contact_email', 'contact_phone', 'address', 'country', 'city')}),
         (_('Mailing'), {'fields': ('welcome_message', 'signature',)}),
         (_('Social'), {'fields': ('facebook_link', 'twitter_link', 'youtube_link',
-                                  'google_plus_link', 'instagram_link', 'tumblr_link', 'linkedin_link',)}),
+                                  'instagram_link', 'linkedin_link',)}),
         (_('External scripts'), {'fields': ('scripts', )})
     ]
     if getattr(settings, 'IS_VOD_OPERATOR', False):
